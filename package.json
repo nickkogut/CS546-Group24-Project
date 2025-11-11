@@ -1,0 +1,25 @@
+{
+  "name": "cs546-group24-final-project",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/nickkogut/CS546-Group24-Project#readme",
+  "bugs": {
+    "url": "https://github.com/nickkogut/CS546-Group24-Project/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nickkogut/CS546-Group24-Project.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "seed": "node ./tasks/seed.js",
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "mongodb": "^7.0.0"
+  }
+}
