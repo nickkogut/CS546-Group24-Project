@@ -7,26 +7,33 @@ export const checkString = (val) => {
     return val;
 }
 
-export const valOrDefault = (val, defaultVal, f) => {
+export const valOrDefault = (val, defaultVal, f, fArgs) => {
     // if val is empty or not supplied, return the default value
     // Otherwise if f is supplied return f(val), if its not then just return val
+    // if an array fArgs is supplied, its elements will be passed as arguments to f 
     // Note: f might be something like checkString
     if (typeof val === "undefined" || (typeof val === "string" && val.trim() === "")) {
         return defaultVal;
     } else if (typeof f !== "undefined") {
-        return f(val);
+        if (typeof fArgs !== "undefined") {
+            return f(val, ...fArgs);
+        } else {
+            return f(val);
+        }
     } else {
         return val;
     }
 }
 
-export const checkNumber = (val) => {
+export const checkNumber = (val, min, max) => {
     // returns a number representation the value passed to it if possible.
     if (typeof val === "number") return val;
     if (typeof val === "string") {
         val = parseFloat(val);
         if (val === NaN) throw `Error: expected an integer. Received ${val}`;
     }
+    if (typeof min !== "undefined" && val < min) throw `Error: number ${val} out of range`;
+    if (typeof max !== "undefined" && val > max) throw `Error: number ${val} out of range`;
     return val;
 }
 
@@ -56,6 +63,12 @@ export const checkDate = (val) => {
     val = checkString(val);
     if (!/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(val)) throw `Error: ${val} should be MM/DD/YYYY`;
     return new Date(val);
+}
+
+export const clamp = (val, min, max) => {
+    if (val > max) return max;
+    if (val < min) return min;
+    return val;
 }
 
 

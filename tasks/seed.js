@@ -1,8 +1,8 @@
 import { ObjectId } from "mongodb";
-import { users, userJobs, openJobs, payrollJobs } from "../config/mongoCollections.js";
+import { users, openJobs, payrollJobs } from "../config/mongoCollections.js";
 import fs from "fs";
 
-const savedIds = { // Stores the id of everything added to the database
+const savedIds = { // Stores the id of everything added to the database. Used for making sample data
     users: [],
     userJobs: [],
     openJobs: [],
@@ -11,12 +11,10 @@ const savedIds = { // Stores the id of everything added to the database
 
 
 const getDataFromJson = (filePath) => {
-    // args are passed from within this file, and assumed to be valid.
     return JSON.parse(fs.readFileSync(filePath).toString());
 }
 
 const main = async () => {
-
     // PAYROLL JOBS
     const payrollJobsCollection = await payrollJobs();
     await payrollJobsCollection.deleteMany({});
@@ -54,7 +52,7 @@ const main = async () => {
     const newOpenJobs = [];
     for (const openJob of openJobsData) {
         let _id = new ObjectId();
-        const { jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url } = openJob;
+        const { jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url, keywords } = openJob;
         const newOpenJob = {
             jobId,
             agency,
@@ -68,6 +66,7 @@ const main = async () => {
             skills,
             residency,
             postingDate: new Date(postingDate),
+            keywords: keywords,
             salary,
             url
         }
