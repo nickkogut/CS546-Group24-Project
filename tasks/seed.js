@@ -1,24 +1,21 @@
 import { ObjectId } from "mongodb";
-import {users, userJobs, openJobs, payrollJobs} from "../config/mongoCollections.js";
+import { users, openJobs, payrollJobs } from "../config/mongoCollections.js";
 import fs from "fs";
 
-const savedIds = { // Stores the id of everything added to the database
+const savedIds = { // Stores the id of everything added to the database. Used for making sample data
     users: [],
-    userJobs: [],
     openJobs: [],
-    payrollJobs : []
+    payrollJobs: []
 };
 
 
-const getDataFromJson = (filePath) =>
-    {
-        // args are passed from within this file, and assumed to be valid.
-        return JSON.parse(fs.readFileSync(filePath).toString());
-    } 
+const getDataFromJson = (filePath) => {
+    return JSON.parse(fs.readFileSync(filePath).toString());
+}
 
 const main = async () => {
-    
     // PAYROLL JOBS
+    console.log("Adding payroll jobs (may take ~10 seconds)")
     const payrollJobsCollection = await payrollJobs();
     await payrollJobsCollection.deleteMany({});
     const payrollJobsData = getDataFromJson("tasks/payroll.json");
@@ -44,20 +41,23 @@ const main = async () => {
         if (!insertInfo) {
             throw "Error inserting payroll jobs"
         }
+        console.log(`Added ${newPayrollJobs.length} historical jobs.`)
     } catch (e) {
         console.log(e);
     }
 
     // OPEN JOBS
+    console.log("Adding open jobs")
     const openJobsCollection = await openJobs();
     await openJobsCollection.deleteMany({});
     const openJobsData = getDataFromJson("tasks/postings.json");
     const newOpenJobs = [];
     for (const openJob of openJobsData) {
         let _id = new ObjectId();
-        const { jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url } = openJob;
+        const { jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url, keywords } = openJob;
         const newOpenJob = {
-            jobId,
+            // jobId,
+            _id,
             agency,
             title,
             category,
@@ -68,7 +68,8 @@ const main = async () => {
             reqs,
             skills,
             residency,
-            postingDate,
+            postingDate: new Date(postingDate),
+            keywords: keywords,
             salary,
             url
         }
@@ -80,62 +81,64 @@ const main = async () => {
         if (!insertInfo) {
             throw "Error inserting open jobs"
         }
+        console.log(`Added ${newOpenJobs.length} open job listings.`)
     } catch (e) {
         console.log(e);
     }
 
     // USERS
+    console.log("Adding sample users")
     const usersCollection = await users();
     await usersCollection.deleteMany({});
     const usersToAdd = []
-    
+
     let _id = new ObjectId();
     savedIds.users.push(_id);
     const user1 = {
         _id,
         "firstName": "Steve",
-        "lastName ":  "Jobs",
-        "email":  "sjobs@apple.com",
-        "borough":  "Brooklyn",
+        "lastName ": "Jobs",
+        "email": "sjobs@apple.com",
+        "borough": "Brooklyn",
         "age": 53,
         "hashedPassword": "$2a$08$XdvNkfdNIL8F8xsuIUeSbNOFgK0M0iV5HOskfVn7.PWncShU.O",
         "public": true,
-        "heldJobs ": [ 
+        "heldJobs": [
             {
-            "_id":  new ObjectId(),
-            "title":  "President",
-            "agency":  "Technology and Innovation",
-            "startYear ": 2021,
-            "endYear": 2025,
-            "startSalary": 999_000.01,
-            "endSalary": 999_999.99,
-            "borough":  "Manhattan"
+                "_id": new ObjectId(),
+                "title": "President",
+                "agency": "Technology and Innovation",
+                "startYear ": 2021,
+                "endYear": 2025,
+                "startSalary": 999_000.01,
+                "endSalary": 999_999.99,
+                "borough": "Manhattan"
             },
-            
+
             {
-            "_id":  new ObjectId(),
-            "title":  "Vice President",
-            "agency":  "Sewage",
-            "startYear ": 2018,
-            "endYear": 2021,
-            "startSalary": 25_000.01,
-            "endSalary": 29_000.10,
-            "borough":  "Queens"
+                "_id": new ObjectId(),
+                "title": "Vice President",
+                "agency": "Sewage",
+                "startYear ": 2018,
+                "endYear": 2021,
+                "startSalary": 25_000.01,
+                "endSalary": 29_000.10,
+                "borough": "Queens"
             }
         ],
-        
-        "possibleJobs ": [
+
+        "taggedJobs": [
             {
-            "job ":  savedIds.openJobs[0],
-            "applicationStatus":  "Applied",
-            "notes ":  "Near grandma’s house, good pay.",
-            "confidence":  "High",
+                "jobId": savedIds.openJobs[0],
+                "applicationStatus": "Applied",
+                "notes": "Near grandma's house, good pay.",
+                "confidence": "High",
             },
             {
-            "job ":  savedIds.openJobs[1],
-            "applicationStatus":  "Interview Scheduled",
-            "notes ":  "I don't meet half the requirements but they have a free cafeteria so I'm trying.",
-            "confidence":  "Low",
+                "jobId": savedIds.openJobs[1],
+                "applicationStatus": "Interview Scheduled",
+                "notes": "I don't meet half the requirements but they have a free cafeteria so I'm trying.",
+                "confidence": "Low",
             }
         ]
     }
@@ -145,28 +148,28 @@ const main = async () => {
     const user2 = {
         _id,
         "firstName": "Joe",
-        "lastName ":  "Smith",
-        "email":  "js@aol.com",
-        "borough":  "Staten Island",
+        "lastName ": "Smith",
+        "email": "js@aol.com",
+        "borough": "Staten Island",
         "age": 20,
         "hashedPassword": "$s8da09s7d0as7d0a98sd0iV5HOskfVn7.PWncS$90$1",
         "public": false,
-        "heldJobs ": [ 
+        "heldJobs ": [
             {
-            "_id":  new ObjectId(),
-            "title":  "Assistant Janitor",
-            "agency":  "Department of Education",
-            "startYear ": 2023,
-            "endYear": 2024,
-            "startSalary": 20_000,
-            "endSalary": 22_000,
-            "borough":  "Staten Island"
+                "_id": new ObjectId(),
+                "title": "Assistant Janitor",
+                "agency": "Department of Education",
+                "startYear ": 2023,
+                "endYear": 2024,
+                "startSalary": 20_000,
+                "endSalary": 22_000,
+                "borough": "Staten Island"
             }
         ],
-        
-        "possibleJobs ": []
+
+        "taggedJobs": []
     }
-    
+
 
 
     usersToAdd.push(user1);
@@ -174,10 +177,11 @@ const main = async () => {
     try {
         let insertInfo = await usersCollection.insertMany(usersToAdd);
         if (!insertInfo) throw "Error: failed to add user";
+        console.log(`Added ${usersToAdd.length} sample users`)
     } catch (e) {
         console.log(e);
     }
-    
+
 
 };
 
