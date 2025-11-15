@@ -4,7 +4,6 @@ import fs from "fs";
 
 const savedIds = { // Stores the id of everything added to the database. Used for making sample data
     users: [],
-    userJobs: [],
     openJobs: [],
     payrollJobs: []
 };
@@ -16,6 +15,7 @@ const getDataFromJson = (filePath) => {
 
 const main = async () => {
     // PAYROLL JOBS
+    console.log("Adding payroll jobs (may take ~10 seconds)")
     const payrollJobsCollection = await payrollJobs();
     await payrollJobsCollection.deleteMany({});
     const payrollJobsData = getDataFromJson("tasks/payroll.json");
@@ -41,11 +41,13 @@ const main = async () => {
         if (!insertInfo) {
             throw "Error inserting payroll jobs"
         }
+        console.log(`Added ${newPayrollJobs.length} historical jobs.`)
     } catch (e) {
         console.log(e);
     }
 
     // OPEN JOBS
+    console.log("Adding open jobs")
     const openJobsCollection = await openJobs();
     await openJobsCollection.deleteMany({});
     const openJobsData = getDataFromJson("tasks/postings.json");
@@ -54,7 +56,8 @@ const main = async () => {
         let _id = new ObjectId();
         const { jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url, keywords } = openJob;
         const newOpenJob = {
-            jobId,
+            // jobId,
+            _id,
             agency,
             title,
             category,
@@ -78,11 +81,13 @@ const main = async () => {
         if (!insertInfo) {
             throw "Error inserting open jobs"
         }
+        console.log(`Added ${newOpenJobs.length} open job listings.`)
     } catch (e) {
         console.log(e);
     }
 
     // USERS
+    console.log("Adding sample users")
     const usersCollection = await users();
     await usersCollection.deleteMany({});
     const usersToAdd = []
@@ -98,7 +103,7 @@ const main = async () => {
         "age": 53,
         "hashedPassword": "$2a$08$XdvNkfdNIL8F8xsuIUeSbNOFgK0M0iV5HOskfVn7.PWncShU.O",
         "public": true,
-        "heldJobs ": [
+        "heldJobs": [
             {
                 "_id": new ObjectId(),
                 "title": "President",
@@ -122,17 +127,17 @@ const main = async () => {
             }
         ],
 
-        "possibleJobs ": [
+        "taggedJobs": [
             {
-                "job ": savedIds.openJobs[0],
+                "jobId": savedIds.openJobs[0],
                 "applicationStatus": "Applied",
-                "notes ": "Near grandma’s house, good pay.",
+                "notes": "Near grandma's house, good pay.",
                 "confidence": "High",
             },
             {
-                "job ": savedIds.openJobs[1],
+                "jobId": savedIds.openJobs[1],
                 "applicationStatus": "Interview Scheduled",
-                "notes ": "I don't meet half the requirements but they have a free cafeteria so I'm trying.",
+                "notes": "I don't meet half the requirements but they have a free cafeteria so I'm trying.",
                 "confidence": "Low",
             }
         ]
@@ -162,7 +167,7 @@ const main = async () => {
             }
         ],
 
-        "possibleJobs ": []
+        "taggedJobs": []
     }
 
 
@@ -172,6 +177,7 @@ const main = async () => {
     try {
         let insertInfo = await usersCollection.insertMany(usersToAdd);
         if (!insertInfo) throw "Error: failed to add user";
+        console.log(`Added ${usersToAdd.length} sample users`)
     } catch (e) {
         console.log(e);
     }

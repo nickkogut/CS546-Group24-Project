@@ -1,3 +1,5 @@
+import { ObjectId } from "mongodb";
+
 export const checkString = (val) => {
     // throws if the input is not a non-empty string
     // returns the trimmed string
@@ -5,6 +7,12 @@ export const checkString = (val) => {
     val = val.trim();
     if (val.length === 0) throw "Error: string most be non-empty";
     return val;
+}
+
+export const checkId = (id) => {
+    id = checkString(id);
+    if (!ObjectId.isValid(id)) throw "Error: invalid object ID";
+    return id; // trimmed
 }
 
 export const valOrDefault = (val, defaultVal, f, fArgs) => {
