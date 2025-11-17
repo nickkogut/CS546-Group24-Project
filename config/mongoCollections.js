@@ -16,4 +16,4 @@ const getCollectionFn = (collection) => {
 export const users = getCollectionFn('users');
 export const userJobs = getCollectionFn('userJobs');
 export const payrollJobs = getCollectionFn('payrollJobs');
-export const openJobs = getCollectionFn('openJobs');
+export const openJobs = getCollectionFn('openJexport const passwordResetTokens = getCollectionFn('passwordResetTokens');
