@@ -1,12 +1,25 @@
-// import XXXRoutes from "./filename.js";
-
+// routes/index.js
+import usersRoutes from "./users.js";
+import openJobsRoutes from "./openJobs.js";
+import payrollRoutes from "./payroll.js";
+import analysisRoutes from "./analysis.js";
+import authRoutes from "./auth.js";
+import { requireAuth } from "../middleware/auth.js";
 
 const constructorMethod = (app) => {
-	// app.use("/routePath", XXXRoutes);
 
-    app.use("{*splat}", (req, res) => {
-        res.status(404).json({ error: "Route Not found" });
-    });
+  // login / register / forgot password do not require login
+  app.use("/auth", authRoutes);
+
+  // The following routes require login
+  app.use("/users", requireAuth, usersRoutes);
+  app.use("/openJobs", requireAuth, openJobsRoutes);
+  app.use("/payroll", requireAuth, payrollRoutes);
+  app.use("/analysis", requireAuth, analysisRoutes);
+
+  app.use("*", (req, res) => {
+    res.status(404).json({ error: "Route Not Found" });
+  });
 };
 
 export default constructorMethod;
