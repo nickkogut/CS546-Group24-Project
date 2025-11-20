@@ -25,6 +25,8 @@ const main = async () => {
 
         const { title, agency, startYear, endYear, startSalary, endSalary, employee, borough } = payrollJob;
         const newPayrollJob = {
+            title,
+            agency,
             _id,
             startYear,
             endYear,

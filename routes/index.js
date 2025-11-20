@@ -1,3 +1,5 @@
+import jobCompareRoutes from './jobCompare.js';
+
 const constructorMethod = (app) => {
   app.get('/', (req, res) => {
     res.render('home', {title: 'Home | CareerScope NYC'});
@@ -7,9 +9,10 @@ const constructorMethod = (app) => {
     res.render('jobs', {title: 'Jobs | CareerScope NYC'});
   });
 
-  app.get('/compare', (req, res) => {
-    res.render('compare', {title: 'Compare | CareerScope NYC'});
-  });
+  //app.get('/compare', (req, res) => {
+ // res.render('compare', {title: 'Compare | CareerScope NYC'});
+  //});
+   app.use('/compare', jobCompareRoutes);
 
   app.get('/account', (req, res) => {
     res.render('account', {title: 'My Account | CareerScope NYC'});

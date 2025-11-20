@@ -4,6 +4,10 @@ const app = express();
 import configRoutes from './routes/index.js';
 import Handlebars from 'handlebars';
 import exphbs from 'express-handlebars';
+import jobCompareRouter from "./routes/jobCompare.js";
+
+app.use("/jobCompare", jobCompareRouter);
+
 
 const staticDir = express.static('public');
 
