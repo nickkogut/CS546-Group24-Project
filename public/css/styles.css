@@ -1,0 +1,78 @@
+body {
+  margin: 0;
+  font-family: system-ui, "Segoe UI", sans-serif;
+  background: #cee4ef;
+}
+
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 76px; 
+  padding: 0 1.5rem;
+  background: #9bcceb;
+  border-bottom: 1px solid #5c44bb;
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #111;
+}
+
+.logo {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.site-name {
+  margin-left: 10px;
+  font-weight: 650;
+  font-size: 2.0rem;
+}
+
+.main-nav .nav-links {
+  list-style: none;
+  display: flex;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+}
+
+.main-nav a {
+  text-decoration: none;
+  margin-left: 10px;
+  font-weight: 650;
+  font-size: 2.0rem;
+  color: #111;
+  position: relative;    
+  transition: color 0.35s ease;
+}
+
+.main-nav a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  transform: scaleX(0);
+  height: 2px;
+  bottom: 0;       
+  left: 0;
+  background-color: #0087ca;
+  transform-origin: bottom right;       
+  transition: transform 0.25s ease-out;
+}
+
+.main-nav a:hover::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;        
+}
+
+main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
