@@ -15,6 +15,7 @@ export const checkId = (id) => {
     return id; // trimmed
 }
 
+
 export const valOrDefault = (val, defaultVal, f, fArgs) => {
     // if val is empty or not supplied, return the default value
     // Otherwise if f is supplied return f(val), if its not then just return val
@@ -35,11 +36,11 @@ export const valOrDefault = (val, defaultVal, f, fArgs) => {
 
 export const checkNumber = (val, min, max) => {
     // returns a number representation the value passed to it if possible.
-    if (typeof val === "number") return val;
     if (typeof val === "string") {
-        val = parseFloat(val);
-        if (val === NaN) throw `Error: expected an integer. Received ${val}`;
+        val = Number(val);
     }
+    if (typeof val !== "number" || val === NaN) throw `Error: expected a number, received ${val}`;
+
     if (typeof min !== "undefined" && val < min) throw `Error: number ${val} out of range`;
     if (typeof max !== "undefined" && val > max) throw `Error: number ${val} out of range`;
     return val;
@@ -59,7 +60,7 @@ export const checkBorough = (val) => {
     val = checkString(val);
 
     for (let i = 0; i < validBoroughs.length; i++) {
-        if (validBoroughs[i].toLowerCase() === val) return validBoroughs[i];
+        if (validBoroughs[i].toLowerCase() === val.toLowerCase()) return validBoroughs[i];
     }
 
     throw `Error: ${val} is not a borough`;
@@ -69,8 +70,9 @@ export const checkDate = (val) => {
     // Use with dates in the open jobs dataset. Input dates must be strings of  the form MM/DD/YYYY
     // returns a date object
     val = checkString(val);
-    if (!/^[0-9]{2}\/[0-9]{2}\/[0-9]{4}$/.test(val)) throw `Error: ${val} should be MM/DD/YYYY`;
-    return new Date(val);
+    if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(val)) throw `Error: ${val} should be YYYY-MM-DD`;
+
+    return new Date(val.substring(5, 7) + "/" + val.substring(8, 10) + "/" + val.substring(0, 4)); // Convert to MM/DD/YYYY
 }
 
 export const clamp = (val, min, max) => {

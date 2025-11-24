@@ -1,4 +1,93 @@
 <main>
   <h1>Jobs</h1>
   <p>Nick is doing this one.</p>
-</main>
+
+  <form id="openJobSearch" name="openJobSearch" method="post" action="/jobs">
+
+    {{!-- Prepare dropdowns --}}
+    <datalist id="agencyList">
+      {{#each dropdownOptions.agencies}}
+      <option value="{{this}}"></option>
+      {{/each}}
+    </datalist>
+
+    <datalist id="titleList">
+      {{#each dropdownOptions.titles}}
+      <option value="{{this}}"></option>
+      {{/each}}
+    </datalist>
+
+    {{!-- Fields --}}
+    <input id="agency" name="agency" type="text" autoComplete="on" list="agencyList" placeholder="Select an Agency" />
+    <input id="title" name="title" type="text" autoComplete="on" list="titleList" placeholder="Select a Job Title" />
+    <input id="keywords" name="keywords" type="text" placeholder="Enter Job Keywords" />
+    <select id="borough" name="borough">
+      <option selected value="">Any Borough</option>
+      <option value="Manhattan">Manhattan</option>
+      <option value="Staten Island">Staten Island</option>
+      <option value="Queens">Queens</option>
+      <option value="Bronx">Bronx</option>
+      <option value="Brooklyn">Brooklyn</option>
+    </select>
+    {{!-- Do we want to input resume here, or just pull it for logged-in users? --}}
+
+    <input id="minDate" name="minDate" type="date" />
+
+    <div id="salaryRangeContainer">
+      <input type="text" id="salaryRangeValue" readonly>
+      <div id="salarySlider"></div>
+      <input type="text" name="minSalary" id="minSalary" value="0" hidden readonly></input>
+      <input type="text" name="maxSalary" id="maxSalary" value="200000" hidden readonly></input>
+    </div>
+
+    <input id="page" name="page" type="number" value="{{pageInfo.page}}" min="1" max="{{pageInfo.maxPage}}" hidden
+      readonly>
+    <input id="nonResidency" name="nonResidency" type="checkbox" checked />
+    <input id="fullTime" name="fullTime" type="checkbox" />
+    <select id="numPerPage" name="numPerPage">
+      <option value="10" selected>10</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select>
+
+    <input id="submitSearch" name="submitSearch" type="submit" value="Submit">
+    <button id="resetSearch" name="resetSearch">Reset</button>
+
+    {{!-- Labels --}}
+    <label for="agency">Agency</label>
+    <label for="title">Job Title</label>
+    <label for="borough">Borough</label>
+    <label for="salaryRangeValue">Salary Range</label>
+    <label for="keywords">Keywords</label>
+    <label for="nonResidency">Open to Non-Residents</label>
+    <label for="fullTime">Full Time Only</label>
+    <label for="minDate">Posted Since</label>
+    <label for="numPerPage"> Results Per Page</label>
+
+  </form>
+
+  <div id="error" hidden>
+    <ul id="errorList">
+    </ul>
+
+  </div>
+
+  <div id="jobListings">
+    {{#each jobs}}
+    <div class="listing">
+      <p>{{title}}</p>
+    </div>
+    {{/each}}
+  </div>
+
+  <div id="pageControls">
+    <button id="prevPage" name="prevPage">Previous Page</button>
+    <button id="nextPage" name="nextPage">Next Page</button>
+    <p>Page {{pageInfo.page}}/{{pageInfo.maxPage}} Total: {{pageInfo.numResults}} Jobs</p>
+  </div>
+
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+  <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
+  <script src="/public/js/openJobs.js"></script>

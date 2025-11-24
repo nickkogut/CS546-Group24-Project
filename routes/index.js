@@ -1,25 +1,22 @@
 import jobCompareRoutes from './jobCompare.js';
+import openJobRoutes from './openJobs.js';
+
 
 const constructorMethod = (app) => {
   app.get('/', (req, res) => {
-    res.render('home', {title: 'Home | CareerScope NYC'});
+    res.render('home', { title: 'Home | CareerScope NYC' });
   });
 
-  app.get('/jobs', (req, res) => {
-    res.render('jobs', {title: 'Jobs | CareerScope NYC'});
-  });
+  app.use('/jobs', openJobRoutes);
 
-  //app.get('/compare', (req, res) => {
- // res.render('compare', {title: 'Compare | CareerScope NYC'});
-  //});
-   app.use('/compare', jobCompareRoutes);
+  app.use('/compare', jobCompareRoutes);
 
   app.get('/account', (req, res) => {
-    res.render('account', {title: 'My Account | CareerScope NYC'});
+    res.render('account', { title: 'My Account | CareerScope NYC' });
   });
 
   app.use((req, res) => {
-    res.status(404).json({error: 'Route Not found'});
+    res.status(404).json({ error: 'Route Not found' });
   });
 };
 
