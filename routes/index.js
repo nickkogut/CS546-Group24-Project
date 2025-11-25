@@ -5,6 +5,7 @@ import payrollRoutes from "./payroll.js";
 import analysisRoutes from "./analysis.js";
 import authRoutes from "./auth.js";
 import { requireAuth } from "../middleware/auth.js";
+import jobCompareRoutes from './jobCompare.js';
 
 const constructorMethod = (app) => {
 

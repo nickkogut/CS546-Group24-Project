@@ -12,6 +12,10 @@ import Handlebars from 'handlebars';
 import exphbs from 'express-handlebars';
 app.use("/jobCompare", jobCompareRouter);
 
+app.use(express.json());
+import jobCompareRouter from "./routes/jobCompare.js";
+
+app.use("/jobCompare", jobCompareRouter);
 app.use('/public', staticDir);
 
 
