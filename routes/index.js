@@ -16,7 +16,7 @@ const constructorMethod = (app) => {
   app.use("/openJobs", requireAuth, openJobsRoutes);
   app.use("/payroll", requireAuth, payrollRoutes);
   app.use("/analysis", requireAuth, analysisRoutes);
-app.get('/', (req, res) => {
+  app.get('/', (req, res) => {
     res.render('home', {title: 'Home | CareerScope NYC'});
   });
 
@@ -24,10 +24,10 @@ app.get('/', (req, res) => {
     res.render('jobs', {title: 'Jobs | CareerScope NYC'});
   });
 
-  //app.get('/compare', (req, res) => {
- // res.render('compare', {title: 'Compare | CareerScope NYC'});
-  //});
-   app.use('/compare', jobCompareRoutes);
+  app.use('/compare', jobCompareRoutes);
+  app.get('/compare', (req, res) => {
+    res.render('compare', {title: 'Compare | CareerScope NYC'});
+  });
 
   app.get('/account', (req, res) => {
     res.render('account', {title: 'My Account | CareerScope NYC'});

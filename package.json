@@ -28,6 +28,9 @@
     "connect-mongo": "^5.1.0",
     "express-session": "^1.18.2",
     "mongodb": "^6.0.0",
-    "nodemailer": "^7.0.10"
+    "nodemailer": "^7.0.10",
+    "axios": "^1.13.2",
+    "express": "^5.1.0",
+    "express-handlebars": "^8.0.2"
   }
 }
