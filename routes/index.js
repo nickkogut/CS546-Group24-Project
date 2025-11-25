@@ -17,6 +17,7 @@ const constructorMethod = (app) => {
   app.use("/openJobs", requireAuth, openJobsRoutes);
   app.use("/payroll", requireAuth, payrollRoutes);
   app.use("/analysis", requireAuth, analysisRoutes);
+
   app.get('/', (req, res) => {
     res.render('home', {title: 'Home | CareerScope NYC'});
   });
@@ -33,6 +34,7 @@ const constructorMethod = (app) => {
   app.get('/account', (req, res) => {
     res.render('account', {title: 'My Account | CareerScope NYC'});
   });
+
   app.use("*", (req, res) => {
     res.status(404).json({ error: "Route Not Found" });
   });
