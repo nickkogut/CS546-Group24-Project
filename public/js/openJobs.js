@@ -1,13 +1,3 @@
-// Load form attributes if possible
-var formFields = ["title", "agency", "keywords", "borough", "minDate", "minSalary", "maxSalary", "nonResidency", "fullTime", "numPerPage", "page"];
-
-formFields.forEach((field) => {
-    let val = localStorage.getItem(`${field}`);
-    if (val) {
-        $(`#${field}`).val(val);
-    }
-});
-
 const updateSliderDisplay = (min, max) => {
     let shownMin = 500 * Math.round(min / 500);
     let shownMax = 500 * Math.round(max / 500);
@@ -26,7 +16,6 @@ const updateSliderDisplay = (min, max) => {
     $("#salaryRangeValue").val("$" + shownMin + " - $" + shownMax);
     $("#minSalary").val(postedMin);
     $("#maxSalary").val(postedMax);
-
 }
 
 $(function () {
@@ -44,9 +33,13 @@ $(function () {
 
 updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
 
-$("#openJobSearch").submit(function (event) {
+(function ($) {
+  // form submission
+  $("#openJobSearch").submit(function (event) {
+    event.preventDefault();
     $("#error").hide();
     $("#errorList").empty();
+    $("#jobListings").empty();
     const errors = [];
 
     const minDate = $("#minDate").val();
@@ -60,6 +53,15 @@ $("#openJobSearch").submit(function (event) {
     const title = $("#title").val().trim();
     const agency = $("#agency").val().trim();
     const keywords = $("#keywords").val().trim();
+
+    // new
+    const borough = $("#borough").val();
+    const fullTime = $("#fullTime").val();
+    const nonResidency = $("#nonResidency").val();
+    const minSalary = $("#minSalary").val();
+    const maxSalary = $("#maxSalary").val();
+    const numPerPage = $("#numPerPage").val();
+    const page = $("#page").val();
 
     if (title.length > 100) errors.push(`<li class="error">Title is too long</li>`);
     if (agency.length > 100) errors.push(`<li class="error">Agency is too long</li>`);
@@ -79,15 +81,7 @@ $("#openJobSearch").submit(function (event) {
     if (matchingAgencies.length === 0) errors.push(`<li class="error">No matching agencies</li>`);
     if (matchingTitles.length === 0) errors.push(`<li class="error">No matching titles</li>`);
 
-    if (errors.length === 0) {
-        // Store attributes to re-populate them after submission
-        formFields.forEach((field) => {
-            let val = $(`#${field}`).val();
-            localStorage.setItem(`${field}`, val);
-        });
-
-
-    } else {
+    if (errors.length > 0) {
         $('#openJobSearch').trigger('reset'); // DEBUG
         $("#error").show();
         errors.forEach((e) => {
@@ -98,11 +92,54 @@ $("#openJobSearch").submit(function (event) {
         updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
         $("#salarySlider").slider("value", $("#salarySlider").slider("value"));
         $("#salarySlider").slider("values", [Number($("#minSalary").val()), Number($("#maxSalary").val())]);
+
+        $("#pageText").text(`No results`);
         return false;
     }
-    return true;
-});
 
+    else {
+      let requestConfig = {
+        method: 'POST',
+        url: '/jobs/search',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          agency,
+          title,
+          borough,
+          minSalary,
+          maxSalary,
+          keywords,
+          nonResidency,
+          fullTime,
+          minDate,
+          numPerPage,
+          page
+        })
+      };
+
+    $.ajax(requestConfig).then(function (responseMessage) {
+        const jobDiv = $("#jobListings");
+
+        console.log(responseMessage);
+        responseMessage.jobs.map((jobListing) => {
+        let element = $(
+            `<div class="listing">
+        <p>${jobListing.title}</p>
+        </div>`
+        );
+
+        // TODO: add rest of info for job in each listing. It should match handlebars
+        jobDiv.append(element);
+        });
+
+
+    const pageInfo = responseMessage.pageInfo;
+    $("#page").val(pageInfo.page);
+    $("#pageText").text(`Page ${pageInfo.page}/${pageInfo.maxPage} Total: ${pageInfo.numResults} Jobs`);
+  });
+    }
+  });
+})(window.jQuery);
 
 $("#nextPage").click(() => {
     let page = Number($("#page").val());
@@ -129,13 +166,13 @@ $("#resetSearch").click(() => {
     updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
     $("#salarySlider").slider("value", $("#salarySlider").slider("value"));
     $("#salarySlider").slider("values", [Number($("#minSalary").val()), Number($("#maxSalary").val())]);
-
     $("#openJobSearch").submit();
 }
 );
 
-
 /*
 TODO:
-- pull in resume (text input here? - validate here)
+- pull in resume
 */
+
+

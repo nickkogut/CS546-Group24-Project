@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import xss from "xss";
 
 export const checkString = (val) => {
     // throws if the input is not a non-empty string
@@ -80,6 +81,26 @@ export const clamp = (val, min, max) => {
     if (val < min) return min;
     return val;
 }
+
+export const applyXSS = (element) => {
+    // Applies xss() to recursively to a string/array/object.
+
+    if (typeof element !== "object") {
+        element = xss(element);
+    }
+    else if (Array.isArray(element)) {
+            element.map((subElement) => {
+                return applyXSS(subElement);
+            });
+    } else {
+        Object.keys(element).forEach((key, _index) => {
+        element[key] = applyXSS(element[key]);
+    })};
+
+    return element;
+}
+    
+
 
 
 

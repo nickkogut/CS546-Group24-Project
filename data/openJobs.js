@@ -33,8 +33,8 @@ export const filterJobs = async (jobOpts) => {
     jobOpts.keywords = jobOpts.keywords.map((keyword) => {
         return checkString(keyword).toLowerCase();
     });
-    jobOpts.fullTime = valOrDefault(jobOpts.fullTime, false, Boolean);
-    jobOpts.nonResidency = valOrDefault(jobOpts.nonResidency, false, Boolean);
+    jobOpts.fullTime = valOrDefault(jobOpts.fullTime, true, Boolean);
+    jobOpts.nonResidency = valOrDefault(jobOpts.nonResidency, true, Boolean);
     jobOpts.borough = valOrDefault(jobOpts.borough, "", checkBorough);
     jobOpts.minDate = valOrDefault(jobOpts.minDate, new Date("01/01/2000"), checkDate);
     jobOpts.minSalary = valOrDefault(jobOpts.minSalary, 0, checkNumber);
@@ -144,96 +144,93 @@ export const filterJobs = async (jobOpts) => {
 }
 
 
+// TODO: these application status functions for the user's subdocument should be combined with the functions in users.js
+
+// export const setAppStatus = async (userId, jobId, status) => {
+//     // TODO: if the user is passed here it must be authenticated previously as the current user 
+//     userId = checkId(userId);
+//     jobId = checkId(jobId)
+//     status = valOrDefault(status, "", checkString);
+
+//     // Force status to match one of these or be blank
+//     if (!["Applied", "Rejected", "Interview Scheduled", "Offer Received", ""].includes(status)) throw `Error: status ${status} is invalid`;
+
+//     // Make sure the user and job ids are valid
+//     const jobIdObj = new ObjectId(jobId);
+//     const userIdObj = new ObjectId(userId);
+
+//     const usersCollection = await users();
+//     const user = await usersCollection.findOne({
+//         _id: userIdObj
+//     });
+//     if (!user) throw `Error could not find user with id ${userId}`;
+
+//     const openJobsCollection = await openJobs();
+//     const job = await openJobsCollection.findOne({
+//         _id: jobIdObj,
+//     });
+//     if (!job) throw `Error could not find job with id ${jobId}`;
 
 
+//     let statusAlreadyExists = false;
+//     // check if the user has already tagged this job with a status
+//     for (let i = 0; i < user.taggedJobs.length; i++) {
+//         if (user.taggedJobs[i].jobId.equals(jobIdObj)) {
+//             if (user.taggedJobs[i].applicationStatus === status) {
+//                 return true; // No update needed
+//             }
+//             statusAlreadyExists = true;
+//             break;
+//         }
+//     }
 
-// export const updateTaggedJob(userId, jobId, status, notes, confidence,)
+//     if (!statusAlreadyExists) {
+//         // add this job entry to the user
+//         const insertion = await usersCollection.updateOne({
+//             _id: userIdObj
+//         },
+//             {
+//                 $push: {
+//                     taggedJobs: {
+//                         jobId: jobIdObj,
+//                         applicationStatus: status,
+//                         notes: "",
+//                         confidence: 0, // TODO: what is the default?
+//                     }
+//                 }
+//             });
 
-export const setAppStatus = async (userId, jobId, status) => {
-    // TODO: if the user is passed here it must be authenticated previously as the current user 
-    userId = checkId(userId);
-    jobId = checkId(jobId)
-    status = valOrDefault(status, "", checkString);
+//         if (!insertion) throw "Error: failed to remove job status";
+//         return insertion;
 
-    // Force status to match one of these or be blank
-    if (!["Applied", "Rejected", "Interview Scheduled", "Offer Received", ""].includes(status)) throw `Error: status ${status} is invalid`;
+//     }
 
-    // Make sure the user and job ids are valid
-    const jobIdObj = new ObjectId(jobId);
-    const userIdObj = new ObjectId(userId);
+//     if (status == "") {
+//         // Remove the tagged job from the user
+//         const removal = await usersCollection.updateOne({
+//             _id: userIdObj
+//         },
+//             {
+//                 $pull: { taggedJobs: { jobId: jobIdObj } }
+//             });
 
-    const usersCollection = await users();
-    const user = await usersCollection.findOne({
-        _id: userIdObj
-    });
-    if (!user) throw `Error could not find user with id ${userId}`;
+//         if (!removal) throw "Error: failed to remove job status";
+//         return removal; // not currentl checking whether or not a change occurred
+//     }
 
-    const openJobsCollection = await openJobs();
-    const job = await openJobsCollection.findOne({
-        _id: jobIdObj,
-    });
-    if (!job) throw `Error could not find job with id ${jobId}`;
+//     // update the user's entry for this job
+//     const update = await usersCollection.updateOne({
+//         _id: userIdObj,
+//         "taggedJobs.jobId": jobIdObj
+//     },
+//         {
+//             $set: { "taggedJobs.$.applicationStatus": status }
+//         });
 
-
-    let statusAlreadyExists = false;
-    // check if the user has already tagged this job with a status
-    for (let i = 0; i < user.taggedJobs.length; i++) {
-        if (user.taggedJobs[i].jobId.equals(jobIdObj)) {
-            if (user.taggedJobs[i].applicationStatus === status) {
-                return true; // No update needed
-            }
-            statusAlreadyExists = true;
-            break;
-        }
-    }
-
-    if (!statusAlreadyExists) {
-        // add this job entry to the user
-        const insertion = await usersCollection.updateOne({
-            _id: userIdObj
-        },
-            {
-                $push: {
-                    taggedJobs: {
-                        jobId: jobIdObj,
-                        applicationStatus: status,
-                        notes: "",
-                        confidence: 0, // TODO: what is the default?
-                    }
-                }
-            });
-
-        if (!insertion) throw "Error: failed to remove job status";
-        return insertion;
-
-    }
-
-    if (status == "") {
-        // Remove the tagged job from the user
-        const removal = await usersCollection.updateOne({
-            _id: userIdObj
-        },
-            {
-                $pull: { taggedJobs: { jobId: jobIdObj } }
-            });
-
-        if (!removal) throw "Error: failed to remove job status";
-        return removal; // not currentl checking whether or not a change occurred
-    }
-
-    // update the user's entry for this job
-    const update = await usersCollection.updateOne({
-        _id: userIdObj,
-        "taggedJobs.jobId": jobIdObj
-    },
-        {
-            $set: { "taggedJobs.$.applicationStatus": status }
-        });
-
-    if (!update) throw "Error: failed to update job status";
-    // TODO: may want to return updated job to the route that calls this so it can be updated on the page
-    return update;
-}
+//     if (!update) throw "Error: failed to update job status";
+//     // TODO: may want to return updated job to the route that calls this so it can be updated on the page
+//     return update;
+// }
 
 export const getDropdownOptions = async () => {
     // Returns all job titles and agencies availabile in the dataset.

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { filterJobs, getDropdownOptions } from "../data/openJobs.js";
+import { applyXSS } from "../helpers.js";
 
 const router = Router();
 const pageTitle = 'Jobs | CareerScope NYC';
@@ -14,16 +15,16 @@ router.get("/", async (req, res) => {
     }
 });
 
-router.post("/", async (req, res) => {
-    const searchFields = req.body;
+
+router.post("/search", async (req, res) => {
+    let searchFields = req.body;
+    searchFields = applyXSS(searchFields);
 
     try {
         const searchResponse = await filterJobs(searchFields);
-        const dropdownOptions = await getDropdownOptions();
-        res.render('jobs', { title: pageTitle, jobs: searchResponse.jobs, pageInfo: searchResponse.pageInfo, dropdownOptions: dropdownOptions });
+        return res.json(searchResponse);
     } catch (e) {
-        // TODO: render error page / message
-        res.status(500).json({ error: e.toString() }); // should this throw 404 if no jobs match?
+        return res.status(500).json({ error: e.toString() }); // should this throw 404 if no jobs match?
     }
 });
 
