@@ -1,22 +1,13 @@
 // app.js
 import express from "express";
+import Handlebars from 'handlebars';
+import exphbs from 'express-handlebars';
 import { mongoConfig } from "./config/settings.js";
-import Handlebars from 'handlebars';
-import exphbs from 'express-handlebars';
-const app = express();
 import configRoutes from './routes/index.js';
-import Handlebars from 'handlebars';
-import exphbs from 'express-handlebars';
-import jobCompareRouter from "./routes/jobCompare.js";
-import Handlebars from 'handlebars';
-import exphbs from 'express-handlebars';
-app.use("/jobCompare", jobCompareRouter);
+import session from 'express-session';
+import MongoStore from "connect-mongo";
 
-app.use(express.json());
-import jobCompareRouter from "./routes/jobCompare.js";
-
-app.use("/jobCompare", jobCompareRouter);
-app.use(express.json());
+const app = express();
 
 app.use(
   session({
@@ -55,8 +46,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-app.use('/public', staticDir);
-
 
 app.use(
   session({
@@ -92,7 +81,7 @@ const handlebarsInstance = exphbs.create({
 
 app.use('/public', staticDir);
 app.use(express.json());
-constructorMethod(app);
+// constructorMethod(app);
 app.use(express.urlencoded({ extended: true }));
 
 app.engine('handlebars', handlebarsInstance.engine);
