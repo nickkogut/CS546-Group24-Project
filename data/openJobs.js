@@ -22,17 +22,31 @@ const parseKeywords = (input) => {
 // agency, title, borough, keywords, resume, residency, fullTime, minDate, minSalary, maxSalary, userId, status, mustMatchKw = false
 export const filterJobs = async (jobOpts) => {
     jobOpts = valOrDefault(jobOpts, {});
-    jobOpts.agency = valOrDefault(jobOpts.agency, "", checkString); // TODO: autocomplete search / show possible choices and verify that this is one of them
-    jobOpts.title = valOrDefault(jobOpts.title, "", checkString); // TODO: same as agency
-    jobOpts.keywords = valOrDefault(jobOpts.keywords, [], parseKeywords);
+    jobOpts.agency = valOrDefault(jobOpts.agency, "", checkString);
+    jobOpts.title = valOrDefault(jobOpts.title, "", checkString);
+    jobOpts.keywords = valOrDefault(jobOpts.keywords, []);
     jobOpts.resume = valOrDefault(jobOpts.resume, [], parseKeywords);
 
-    jobOpts.keywords = [...new Set([...jobOpts.keywords, ...jobOpts.resume])];
 
-    if (!Array.isArray(jobOpts.keywords)) throw "Error: keywords must be an array";
+    if (!Array.isArray(jobOpts.keywords) && typeof jobOpts.keywords !== "string") throw "Error: keywords must be an array or string delimited by spaces";
+
+    if (typeof jobOpts.keywords === "string") jobOpts.keywords = jobOpts.keywords.split(" ");
+
+    // remove any empty arrays created by splitting multiple spaces in a row
+    jobOpts.keywords = jobOpts.keywords.filter((keyword) => {
+        if (keyword == []) {
+            return false;
+        }
+        return true;
+    });
+
     jobOpts.keywords = jobOpts.keywords.map((keyword) => {
         return checkString(keyword).toLowerCase();
     });
+    jobOpts.keywords = [...new Set(jobOpts.keywords)]; // all keywords must appear in result
+
+    const resumeAndKeywords = [...new Set([...jobOpts.resume, ...jobOpts.keywords])]; // sort by results with most matching keywords (not all need to match)
+
     jobOpts.fullTime = valOrDefault(jobOpts.fullTime, true, Boolean);
     jobOpts.nonResidency = valOrDefault(jobOpts.nonResidency, true, Boolean);
     jobOpts.borough = valOrDefault(jobOpts.borough, "", checkBorough);
@@ -41,11 +55,10 @@ export const filterJobs = async (jobOpts) => {
     jobOpts.maxSalary = valOrDefault(jobOpts.maxSalary, 10e9, checkNumber);
 
     jobOpts.numPerPage = valOrDefault(jobOpts.numPerPage, 10, checkNumber);
-    jobOpts.numPerPage = clamp(jobOpts.numPerPage, 8, 50);
+    jobOpts.numPerPage = clamp(jobOpts.numPerPage, 10, 100);
 
     jobOpts.page = valOrDefault(jobOpts.page, 1, checkNumber);
     jobOpts.page = clamp(jobOpts.page, 1, 10e4);
-    // TODO: count returned results and calculate a max page. The route will need to prevent the user from going past it
 
     // TODO: if the user is passed here it must be authenticated previously as the current user 
     jobOpts.userId = valOrDefault(jobOpts.userId, "", checkId);
@@ -71,9 +84,12 @@ export const filterJobs = async (jobOpts) => {
     // Add filters that are only active if certain data is supplied
     // i.e. only use whitelists if data is provided 
 
-    if (jobOpts.mustMatchKw) {
+    // if (jobOpts.mustMatchKw) {
+    if (jobOpts.keywords.length > 0) {
         matchParams.$match.keywords = { $all: jobOpts.keywords };
     }
+
+    // }
 
     if (jobOpts.userId != "" && jobOpts.status != "") {
         // look up the jobs the user has tagged with this status
@@ -98,6 +114,7 @@ export const filterJobs = async (jobOpts) => {
     let numResults, maxPage;
     try {
         const openJobsCollection = await openJobs();
+        const DEBUG = await openJobsCollection.count({})
         numResults = await openJobsCollection.count(matchParams.$match);
         if (numResults === 0) throw "Error: no jobs found";
         maxPage = Math.ceil(numResults / jobOpts.numPerPage);
@@ -109,7 +126,7 @@ export const filterJobs = async (jobOpts) => {
     const searchParams = [
         matchParams,
         {
-            $set: { kwMatches: { $size: { $setIntersection: [jobOpts.keywords, "$keywords"] } } },
+            $set: { kwMatches: { $size: { $setIntersection: [resumeAndKeywords, "$keywords"] } } },
         },
         {
             $sort: { kwMatches: -1 },
@@ -127,8 +144,6 @@ export const filterJobs = async (jobOpts) => {
         const openJobsCollection = await openJobs();
         const jobs = await openJobsCollection.aggregate(searchParams).toArray();
         if (!jobs) throw "Error: found no jobs";
-
-        // TODO: display these on the page
         const result = {
             pageInfo: {
                 page: jobOpts.page,
