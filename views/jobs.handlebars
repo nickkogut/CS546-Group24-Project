@@ -67,8 +67,11 @@
 
   </form>
 
-  <div id="error" hidden>
+  <div id="error" {{#if error}}{{else}}hidden{{/if}}>
     <ul id="errorList">
+      {{#if error}}
+      <li class="error">{{error}}</li>
+      {{/if}}
     </ul>
 
   </div>
