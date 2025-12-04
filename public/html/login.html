@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - NYC Job Analyzer</title>
+  <link rel="stylesheet" href="/css/login.css" />
+</head>
+<body>
+  <div class="page login-page">
+    <div class="card">
+      <h1 class="title">Welcome back</h1>
+      <p class="subtitle">Log in to see your NYC job insights.</p>
+
+      <div id="errorMsg" class="message error" style="display:none;"></div>
+      <div id="successMsg" class="message success" style="display:none;"></div>
+
+      <form class="form" method="POST" action="/auth/login">
+        <div class="field">
+          <label>Email</label>
+          <input type="email" name="email" required />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" name="password" required />
+        </div>
+        <button type="submit" class="btn-primary">Log in</button>
+      </form>
+
+      <div class="links">
+        <a href="/auth/register">Create account</a>
+        <a href="/auth/forgot">Forgot password?</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/login.js"></script>
+</body>
+</html>

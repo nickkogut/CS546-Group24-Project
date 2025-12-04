@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Reset Password - NYC Job Analyzer</title>
+  <link rel="stylesheet" href="/css/reset.css" />
+</head>
+<body>
+  <div class="page reset-page">
+    <div class="card">
+      <h1 class="title">Set a new password</h1>
+      <p class="subtitle">Choose a strong password you haven't used before.</p>
+
+      <div id="errorMsg" class="message error" style="display:none;"></div>
+      <div id="successMsg" class="message success" style="display:none;"></div>
+
+      <form id="resetForm" class="form" method="POST">
+        <div class="field">
+          <label>New Password</label>
+          <input type="password" name="password" required />
+        </div>
+        <button type="submit" class="btn-primary">Reset password</button>
+      </form>
+
+      <div class="links">
+        <a href="/auth/login">Back to login</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/reset.js"></script>
+</body>
+</html>

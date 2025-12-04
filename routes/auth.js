@@ -6,6 +6,11 @@ import { users, passwordResetTokens } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
 import { checkString } from "../helpers.js";
 import { sendResetEmail } from "../config/email.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = Router();
 const SALT_ROUNDS = 10;
@@ -209,6 +214,27 @@ router.post("/reset/:token", async (req, res) => {
   } catch (e) {
     res.status(400).json({ error: e.toString() });
   }
+});
+
+// GET /auth/login
+router.get("/login", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/html/login.html"));
+});
+
+// GET /auth/register
+router.get("/register", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/html/register.html"));
+});
+
+// GET /auth/forgot
+router.get("/forgot", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public/html/forgot.html"));
+});
+
+// GET /auth/reset/:token
+router.get("/reset/:token", (req, res) => {
+  // Serve the reset password HTML page
+  res.sendFile(path.join(__dirname, "../public/html/reset.html"));
 });
 
 export default router;
