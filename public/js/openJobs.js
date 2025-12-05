@@ -34,135 +34,168 @@ $(function () {
 updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
 
 (function ($) {
-  // form submission
-  $("#openJobSearch").submit(function (event) {
-    event.preventDefault();
-    $("#error").hide();
-    $("#errorList").empty();
-    $("#jobListings").empty();
-    const errors = [];
+    // form submission
+    $("#openJobSearch").submit(function (event) {
+        event.preventDefault();
+        $("#error").hide();
+        $("#errorList").empty();
+        $("#jobListings").empty();
+        const errors = [];
 
-    const minDate = $("#minDate").val();
-    if (minDate !== "") {
-        const today = new Date();
-        const formattedDate = minDate.substring(5, 7) + "/" + minDate.substring(8, 10) + "/" + minDate.substring(0, 4);
-        if (new Date(formattedDate) > today) errors.push(`<li class="error">Date cannot be in the future</li>`);
-    }
+        const minDate = $("#minDate").val();
+        if (minDate !== "") {
+            const today = new Date();
+            const formattedDate = minDate.substring(5, 7) + "/" + minDate.substring(8, 10) + "/" + minDate.substring(0, 4);
+            if (new Date(formattedDate) > today) errors.push(`<li class="error">Date cannot be in the future</li>`);
+        }
 
 
-    const title = $("#title").val().trim();
-    const agency = $("#agency").val().trim();
-    const keywords = $("#keywords").val().trim();
+        const title = $("#title").val().trim();
+        const agency = $("#agency").val().trim();
+        const keywords = $("#keywords").val().trim();
 
-    // new
-    const borough = $("#borough").val();
-    const fullTime = $("#fullTime").val();
-    const nonResidency = $("#nonResidency").val();
-    const minSalary = $("#minSalary").val();
-    const maxSalary = $("#maxSalary").val();
-    const numPerPage = $("#numPerPage").val();
-    const page = $("#page").val();
+        // new
+        const borough = $("#borough").val();
+        let fullTime = $("#fullTime").prop("checked");
+        let nonResidency = $("#nonResidency").prop("checked");
+        let useResume = $("#useResume").prop("checked");
+        const minSalary = $("#minSalary").val();
+        const maxSalary = $("#maxSalary").val();
+        const numPerPage = $("#numPerPage").val();
+        let page = $("#page").val();
+        let jobTag = $("#jobTag").val();
 
-    if (title.length > 100) errors.push(`<li class="error">Title is too long</li>`);
-    if (agency.length > 100) errors.push(`<li class="error">Agency is too long</li>`);
-    if (keywords.length > 200) errors.push(`<li class="error">Too many keywords</li>`);
+        if (page < 1) {
+            // the most recent search returned no results
+            page = 1;
+        }
 
-    // Make sure the agency and title will have matches in the database
-    const matchingAgencies = $('#agencyList option').filter(function () {
-        var re = new RegExp(agency, 'i')
-        return this.value.match(re);
-    });
+        if (title.length > 100) errors.push(`<li class="error">Title is too long</li>`);
+        if (agency.length > 100) errors.push(`<li class="error">Agency is too long</li>`);
+        if (keywords.length > 200) errors.push(`<li class="error">Too many keywords</li>`);
 
-    const matchingTitles = $('#titleList option').filter(function () {
-        var re = new RegExp(title, 'i')
-        return this.value.match(re);
-    });
-
-    if (matchingAgencies.length === 0) errors.push(`<li class="error">No matching agencies</li>`);
-    if (matchingTitles.length === 0) errors.push(`<li class="error">No matching titles</li>`);
-
-    if (errors.length > 0) {
-        $('#openJobSearch').trigger('reset'); // DEBUG
-        $("#error").show();
-        errors.forEach((e) => {
-            $("#errorList").append(e);
+        // Make sure the agency and title will have matches in the database
+        const matchingAgencies = $('#agencyList option').filter(function () {
+            var re = new RegExp(agency, 'i')
+            return this.value.match(re);
         });
 
-        // Reset slider
-        updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
-        $("#salarySlider").slider("value", $("#salarySlider").slider("value"));
-        $("#salarySlider").slider("values", [Number($("#minSalary").val()), Number($("#maxSalary").val())]);
-
-        $("#pageText").text(`No results`);
-        return false;
-    }
-
-    else {
-      let requestConfig = {
-        method: 'POST',
-        url: '/jobs/search',
-        contentType: 'application/json',
-        data: JSON.stringify({
-          agency,
-          title,
-          borough,
-          minSalary,
-          maxSalary,
-          keywords,
-          nonResidency,
-          fullTime,
-          minDate,
-          numPerPage,
-          page
-        })
-      };
-
-    $.ajax(requestConfig).then(function (responseMessage) {
-        const jobDiv = $("#jobListings");
-
-        console.log(responseMessage);
-        responseMessage.jobs.map((jobListing) => {
-        let element = $(
-            `<div class="listing">
-        <p>${jobListing.title}</p>
-        </div>`
-        );
-
-        // TODO: add rest of info for job in each listing. It should match handlebars
-        jobDiv.append(element);
+        const matchingTitles = $('#titleList option').filter(function () {
+            var re = new RegExp(title, 'i')
+            return this.value.match(re);
         });
 
+        if (matchingAgencies.length === 0) errors.push(`<li class="error">No matching agencies</li>`);
+        if (matchingTitles.length === 0) errors.push(`<li class="error">No matching titles</li>`);
 
-    const pageInfo = responseMessage.pageInfo;
-    $("#page").val(pageInfo.page);
-    $("#pageText").text(`Page ${pageInfo.page}/${pageInfo.maxPage} Total: ${pageInfo.numResults} Jobs`);
-  });
-    }
-  });
+        if (errors.length > 0) {
+            $('#openJobSearch').trigger('reset');
+            $("#error").show();
+            errors.forEach((e) => {
+                $("#errorList").append(e);
+            });
+
+            // Reset slider
+            updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
+            $("#salarySlider").slider("value", $("#salarySlider").slider("value"));
+            $("#salarySlider").slider("values", [Number($("#minSalary").val()), Number($("#maxSalary").val())]);
+
+            $("#pageText").text(`No results`);
+            return false;
+        }
+
+        else {
+            let requestConfig = {
+                method: 'POST',
+                url: '/jobs/search',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    agency,
+                    title,
+                    borough,
+                    minSalary,
+                    maxSalary,
+                    keywords,
+                    nonResidency,
+                    fullTime,
+                    minDate,
+                    numPerPage,
+                    page,
+                    useResume,
+                    jobTag
+                })
+            };
+
+            $.ajax(requestConfig).then(function (responseMessage) {
+                const jobDiv = $("#jobListings");
+                let pageInfo;
+                console.log(responseMessage);
+
+                if (responseMessage.error) {
+                    $("#error").show();
+                    $("#errorList").append(responseMessage.error);
+                    pageInfo = {
+                        page: 0,
+                        minPage: 1,
+                        maxPage: 0,
+                        numResults: 0
+                    }
+                } else {
+                    responseMessage.jobs.map((jobListing) => {
+                        let element = $(
+                            `<div class="listing">
+                            <p>${jobListing.title}</p>
+                            </div>`
+                        );
+
+                        // TODO: add rest of info for job in each listing. It should match handlebars
+                        jobDiv.append(element);
+                    });
+                    pageInfo = responseMessage.pageInfo;
+                    pageInfo.minPage = 1;
+                }
+
+                $("#page").val(pageInfo.page);
+                $("#page").attr({
+                    "min": pageInfo.minPage,
+                    "max": pageInfo.maxPage
+                });
+                $("#pageText").text(`Page ${pageInfo.page}/${pageInfo.maxPage} Total: ${pageInfo.numResults} Jobs`);
+            });
+        }
+    });
 })(window.jQuery);
 
-$("#nextPage").click(() => {
+$("#nextPage").click((event) => {
+    event.preventDefault();
     let page = Number($("#page").val());
     let maxPage = Number($("#page").attr('max'));
+    if (!$("#error").is(":hidden")) return; // Don't try to get the next page when the search yielded an error
     if (page < maxPage) {
         $("#page").val(page + 1);
         $("#openJobSearch").submit();
     }
 });
 
-$("#prevPage").click(() => {
+$("#prevPage").click((event) => {
+    event.preventDefault();
+    if (!$("#error").is(":hidden")) return; // Don't try to get the next page when the search yielded an error
     let page = Number($("#page").val());
-    if (page > 1) {
+    let minPage = Number($("#page").attr('min'));
+    if (page > minPage) {
         $("#page").val(page - 1);
         $("#openJobSearch").submit();
     }
 });
 
-$("#resetSearch").click(() => {
+$("#resetSearch").click((event) => {
+    event.preventDefault();
     $("#openJobSearch")[0].reset();
 
     // reset attributes that require special default values
+    $("#useResume").prop("checked", false);
     $("#page").val(1);
+    $("#numPerPage").val("10").change();
     updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
     $("#salarySlider").slider("value", $("#salarySlider").slider("value"));
     $("#salarySlider").slider("values", [Number($("#minSalary").val()), Number($("#maxSalary").val())]);
@@ -170,9 +203,17 @@ $("#resetSearch").click(() => {
 }
 );
 
-/*
-TODO:
-- pull in resume
-*/
+$("#submitSearchWithResume").click((event) => {
+    event.preventDefault();
+    $("#useResume").prop("checked", true);
+    $("#openJobSearch").submit();
+});
+
+$("#submitSearch").click((event) => {
+    event.preventDefault();
+    $("#useResume").prop("checked", false);
+    $("#openJobSearch").submit();
+});
+
 
 
