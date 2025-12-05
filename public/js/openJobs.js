@@ -56,12 +56,14 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
 
         // new
         const borough = $("#borough").val();
-        const fullTime = $("#fullTime").val();
-        const nonResidency = $("#nonResidency").val();
+        let fullTime = $("#fullTime").prop("checked");
+        let nonResidency = $("#nonResidency").prop("checked");
+        let useResume = $("#useResume").prop("checked");
         const minSalary = $("#minSalary").val();
         const maxSalary = $("#maxSalary").val();
         const numPerPage = $("#numPerPage").val();
         let page = $("#page").val();
+        let jobTag = $("#jobTag").val();
 
         if (page < 1) {
             // the most recent search returned no results
@@ -87,7 +89,7 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
         if (matchingTitles.length === 0) errors.push(`<li class="error">No matching titles</li>`);
 
         if (errors.length > 0) {
-            $('#openJobSearch').trigger('reset'); // DEBUG
+            $('#openJobSearch').trigger('reset');
             $("#error").show();
             errors.forEach((e) => {
                 $("#errorList").append(e);
@@ -118,7 +120,9 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
                     fullTime,
                     minDate,
                     numPerPage,
-                    page
+                    page,
+                    useResume,
+                    jobTag
                 })
             };
 
@@ -162,7 +166,8 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
     });
 })(window.jQuery);
 
-$("#nextPage").click(() => {
+$("#nextPage").click((event) => {
+    event.preventDefault();
     let page = Number($("#page").val());
     let maxPage = Number($("#page").attr('max'));
     if (!$("#error").is(":hidden")) return; // Don't try to get the next page when the search yielded an error
@@ -172,7 +177,8 @@ $("#nextPage").click(() => {
     }
 });
 
-$("#prevPage").click(() => {
+$("#prevPage").click((event) => {
+    event.preventDefault();
     if (!$("#error").is(":hidden")) return; // Don't try to get the next page when the search yielded an error
     let page = Number($("#page").val());
     let minPage = Number($("#page").attr('min'));
@@ -182,11 +188,14 @@ $("#prevPage").click(() => {
     }
 });
 
-$("#resetSearch").click(() => {
+$("#resetSearch").click((event) => {
+    event.preventDefault();
     $("#openJobSearch")[0].reset();
 
     // reset attributes that require special default values
+    $("#useResume").prop("checked", false);
     $("#page").val(1);
+    $("#numPerPage").val("10").change();
     updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
     $("#salarySlider").slider("value", $("#salarySlider").slider("value"));
     $("#salarySlider").slider("values", [Number($("#minSalary").val()), Number($("#maxSalary").val())]);
@@ -194,9 +203,17 @@ $("#resetSearch").click(() => {
 }
 );
 
-/*
-TODO:
-- pull in resume
-*/
+$("#submitSearchWithResume").click((event) => {
+    event.preventDefault();
+    $("#useResume").prop("checked", true);
+    $("#openJobSearch").submit();
+});
+
+$("#submitSearch").click((event) => {
+    event.preventDefault();
+    $("#useResume").prop("checked", false);
+    $("#openJobSearch").submit();
+});
+
 
 
