@@ -29,7 +29,6 @@
       <option value="Bronx">Bronx</option>
       <option value="Brooklyn">Brooklyn</option>
     </select>
-    {{!-- Do we want to input resume here, or just pull it for logged-in users? --}}
 
     <input id="minDate" name="minDate" type="date" />
 
@@ -39,6 +38,8 @@
       <input type="text" name="minSalary" id="minSalary" value="0" hidden readonly></input>
       <input type="text" name="maxSalary" id="maxSalary" value="200000" hidden readonly></input>
     </div>
+
+    <input id="useResume" name="useResume" type="checkbox" hidden>
 
     <input id="page" name="page" type="number" value="{{pageInfo.page}}" min="1" max="{{pageInfo.maxPage}}" hidden
       readonly>
@@ -51,7 +52,18 @@
       <option value="100">100</option>
     </select>
 
-    <input id="submitSearch" name="submitSearch" type="submit" value="Submit">
+    {{#if isAutheticated}}
+    <select id="jobTag" name="jobTag">
+      <option value="" selected>Job Tag</option>
+      <option value="Applied">Applied</option>
+      <option value="Rejected">Rejected</option>
+      <option value="Interview Scheduled">Interview Scheduled</option>
+      <option value="Offer Received">Offer Received</option>
+    </select>
+    {{/if}}
+
+    <button id="submitSearch" name="submitSearch">Search</button>
+    <button id="submitSearchWithResume" name="submitSearchWithResume">Search with My Resume</button>
     <button id="resetSearch" name="resetSearch">Reset</button>
 
     {{!-- Labels --}}
@@ -64,6 +76,9 @@
     <label for="fullTime">Full Time Only</label>
     <label for="minDate">Posted Since</label>
     <label for="numPerPage"> Results Per Page</label>
+    {{#if isAutheticated}}
+    <label for="jobTag">Job Tag</label>
+    {{/if}}
 
   </form>
 

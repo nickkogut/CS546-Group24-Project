@@ -92,8 +92,6 @@ export const filterJobs = async (jobOpts) => {
     // }
 
     if (jobOpts.userId != "" && jobOpts.status != "") {
-        // look up the jobs the user has tagged with this status
-        // TODO: We could easily allow the user to select multiple statuses at once
         const usersCollection = await users();
         const user = await usersCollection.findOne({
             _id: new ObjectId(jobOpts.userId),
@@ -114,7 +112,6 @@ export const filterJobs = async (jobOpts) => {
     let numResults, maxPage;
     try {
         const openJobsCollection = await openJobs();
-        const DEBUG = await openJobsCollection.count({})
         numResults = await openJobsCollection.count(matchParams.$match);
         if (numResults === 0) throw "Error: no jobs found";
         maxPage = Math.ceil(numResults / jobOpts.numPerPage);
