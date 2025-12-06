@@ -1,0 +1,27 @@
+<div class="page forgot-page">
+  <div class="card">
+    <h1 class="title">Forgot password?</h1>
+    <p class="subtitle">Enter your email to receive a reset link.</p>
+
+    {{#if error}}
+      <div class="message error">{{error}}</div>
+    {{/if}}
+
+    {{#if msg}}
+      <div class="message success">{{msg}}</div>
+    {{/if}}
+
+    <form method="POST" action="/auth/forgot">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" required />
+      </div>
+
+      <button type="submit" class="btn-primary">Send reset link</button>
+    </form>
+
+    <div class="links">
+      <a href="/auth/login">Back to login</a>
+    </div>
+  </div>
+</div>

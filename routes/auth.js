@@ -216,25 +216,50 @@ router.post("/reset/:token", async (req, res) => {
   }
 });
 
-// GET /auth/login
+// GET /login
 router.get("/login", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/html/login.html"));
+  res.render("login", {
+    title: "Login",
+    cssFile: "login.css",
+    jsFile: "login.js",
+    error: req.query.error,
+    msg: req.query.msg
+  });
 });
 
-// GET /auth/register
+
+// GET /register
 router.get("/register", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/html/register.html"));
+  res.render("register", {
+    title: "Register",
+    cssFile: "register.css",
+    jsFile: "register.js",
+    error: req.query.error,
+    msg: req.query.msg
+  });
 });
 
-// GET /auth/forgot
+// GET /forgot
 router.get("/forgot", (req, res) => {
-  res.sendFile(path.join(__dirname, "../public/html/forgot.html"));
+  res.render("forgot", {
+    title: "Forgot Password",
+    cssFile: "forgot.css",
+    jsFile: "forgot.js",
+    error: req.query.error,
+    msg: req.query.msg
+  });
 });
 
-// GET /auth/reset/:token
+// GET /reset/:token
 router.get("/reset/:token", (req, res) => {
-  // Serve the reset password HTML page
-  res.sendFile(path.join(__dirname, "../public/html/reset.html"));
+  res.render("reset", {
+    title: "Reset Password",
+    cssFile: "reset.css",
+    jsFile: "reset.js",
+    token: req.params.token,
+    error: req.query.error,
+    msg: req.query.msg
+  });
 });
 
 export default router;
