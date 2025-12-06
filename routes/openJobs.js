@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { filterJobs, getDropdownOptions } from "../data/openJobs.js";
 import { applyXSS } from "../helpers.js";
+import { users } from "../config/mongoCollections.js";
+import { ObjectId } from "mongodb";
 
 const router = Router();
 const pageTitle = 'Jobs | CareerScope NYC';
@@ -16,9 +18,9 @@ router.get("/", async (req, res) => {
             isAuthenticated = true;
         }
 
-        return res.render('jobs', { title: pageTitle, jobs: searchResponse.jobs, pageInfo: searchResponse.pageInfo, dropdownOptions: dropdownOptions, isAuthenticated });
+        return res.render('jobs', { title: pageTitle, jobs: searchResponse.jobs, pageInfo: searchResponse.pageInfo, dropdownOptions: dropdownOptions, isAuthenticated: isAuthenticated });
     } catch (e) {
-        return res.render('jobs', { title: pageTitle, error: e }).status(500);
+        return res.render('jobs', { title: pageTitle, error: e });
     }
 });
 
@@ -27,17 +29,24 @@ router.post("/search", async (req, res) => {
     let searchFields = req.body;
     searchFields = applyXSS(searchFields);
 
+    let isAuthenticated = false;
+    let usersCollection;
+    let user;
+    if (req.session.user) {
+        isAuthenticated = true;
+        usersCollection = await users();
+        user = await usersCollection.findOne({ _id: new ObjectId(req.session.user._id) });
+        if (!user) throw "Error: failed to find logged in user";
+        searchFields.userId = user._id.toString();
+    }
+
     if (Boolean(searchFields.useResume)) {
-        if (!req.session.user) {
+        if (!isAuthenticated) {
             // If an unauthenticated user clicks "search with my resume" redirect them to the login page
-            return res.render('login');
+            return res.render('login'); // TODO: check if other parameters must be passed to the login page
         } else {
             // Find the user's resume
-            const users = await users();
-            const user = await users.find({ _id: req.session.user._id });
-            if (!user) throw "Error: failed to find logged in user";
-            if (!user.resume) throw "Error: you have not supplied a resume. Please enter one on your profile or search without it" // should this just redirect to the account page?
-
+            if (!user.resume) throw "Error: you have not supplied a resume. Please enter one on your profile or click 'Search' to search without it" // should this just redirect to the account page?
             searchFields.resume = user.resume;
         }
     }

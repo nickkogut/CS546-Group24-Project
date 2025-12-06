@@ -19,7 +19,6 @@ const parseKeywords = (input) => {
 
     return output;
 }
-// agency, title, borough, keywords, resume, residency, fullTime, minDate, minSalary, maxSalary, userId, status, mustMatchKw = false
 export const filterJobs = async (jobOpts) => {
     jobOpts = valOrDefault(jobOpts, {});
     jobOpts.agency = valOrDefault(jobOpts.agency, "", checkString);
@@ -62,10 +61,10 @@ export const filterJobs = async (jobOpts) => {
 
     // TODO: if the user is passed here it must be authenticated previously as the current user 
     jobOpts.userId = valOrDefault(jobOpts.userId, "", checkId);
-    jobOpts.status = valOrDefault(jobOpts.status, "", checkString);
+    jobOpts.jobTag = valOrDefault(jobOpts.jobTag, "", checkString);
 
-    // Force status to match one of these or be blank
-    if (!["applied", "rejected", "interview scheduled", "offer received", ""].includes(jobOpts.status.toLowerCase())) throw `Error: status ${jobOpts.status} is invalid`;
+    // Force jobTag to match one of these or be blank
+    if (!["applied", "rejected", "interview scheduled", "offer received", ""].includes(jobOpts.jobTag.toLowerCase())) throw `Error: jobTag ${jobOpts.jobTag} is invalid`;
 
 
 
@@ -84,27 +83,24 @@ export const filterJobs = async (jobOpts) => {
     // Add filters that are only active if certain data is supplied
     // i.e. only use whitelists if data is provided 
 
-    // if (jobOpts.mustMatchKw) {
     if (jobOpts.keywords.length > 0) {
         matchParams.$match.keywords = { $all: jobOpts.keywords };
     }
 
-    // }
-
-    if (jobOpts.userId != "" && jobOpts.status != "") {
+    if (jobOpts.userId != "" && jobOpts.jobTag != "") {
         const usersCollection = await users();
         const user = await usersCollection.findOne({
             _id: new ObjectId(jobOpts.userId),
         });
         if (user) {
-            const jobIdsMatchingStatus = [];
+            const jobIdsMatchingJobTag = [];
             user.taggedJobs.forEach((job) => {
-                if (job.applicationStatus.toLowerCase() === jobOpts.status.toLowerCase()) {
-                    jobIdsMatchingStatus.push(job.jobId);
+                if (job.applicationStatus.toLowerCase() === jobOpts.jobTag.toLowerCase()) {
+                    jobIdsMatchingJobTag.push(job.jobId);
                 }
             });
 
-            matchParams.$match._id = { $in: jobIdsMatchingStatus };
+            matchParams.$match._id = { $in: jobIdsMatchingJobTag };
         }
     }
 
