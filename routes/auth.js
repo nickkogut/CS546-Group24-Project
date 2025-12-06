@@ -6,6 +6,11 @@ import { users, passwordResetTokens } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
 import { checkString } from "../helpers.js";
 import { sendResetEmail } from "../config/email.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = Router();
 const SALT_ROUNDS = 10;
@@ -209,6 +214,52 @@ router.post("/reset/:token", async (req, res) => {
   } catch (e) {
     res.status(400).json({ error: e.toString() });
   }
+});
+
+// GET /login
+router.get("/login", (req, res) => {
+  res.render("login", {
+    title: "Login",
+    cssFile: "login.css",
+    jsFile: "login.js",
+    error: req.query.error,
+    msg: req.query.msg
+  });
+});
+
+
+// GET /register
+router.get("/register", (req, res) => {
+  res.render("register", {
+    title: "Register",
+    cssFile: "register.css",
+    jsFile: "register.js",
+    error: req.query.error,
+    msg: req.query.msg
+  });
+});
+
+// GET /forgot
+router.get("/forgot", (req, res) => {
+  res.render("forgot", {
+    title: "Forgot Password",
+    cssFile: "forgot.css",
+    jsFile: "forgot.js",
+    error: req.query.error,
+    msg: req.query.msg
+  });
+});
+
+// GET /reset/:token
+router.get("/reset/:token", (req, res) => {
+  res.render("reset", {
+    title: "Reset Password",
+    cssFile: "reset.css",
+    jsFile: "reset.js",
+    token: req.params.token,
+    error: req.query.error,
+    msg: req.query.msg
+  });
 });
 
 export default router;
