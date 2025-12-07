@@ -32,7 +32,7 @@ export const createUser = async ({
     borough,
     age,
     public: !!publicProfile,
-    resume,
+    resume: checkString(resume),
     hashedPassword,
     heldJobs: [],
     taggedJobs: []
@@ -111,7 +111,10 @@ export const addTaggedJob = async (userId, taggedJobData) => {
     jobId: checkString(taggedJobData.jobId),
     applicationStatus: checkString(taggedJobData.applicationStatus),
     notes: taggedJobData.notes || "",
-    confidence: typeof taggedJobData.confidence === "number" ? taggedJobData.confidence : 0
+    confidence:
+      typeof taggedJobData.confidence === "number"
+        ? taggedJobData.confidence
+        : 0
   };
 
   const updateInfo = await users.findOneAndUpdate(
@@ -121,5 +124,25 @@ export const addTaggedJob = async (userId, taggedJobData) => {
   );
 
   if (!updateInfo.value) throw "Error: could not add tagged job";
+  return updateInfo.value;
+};
+
+export const updateUserResume = async (id, resumeText) => {
+  const _id = _idToObjectId(id);
+
+  resumeText = checkString(resumeText, "resume");
+  if (resumeText.length > 10000) throw "Error: resume is too long";
+
+  const users = await usersCollection();
+
+  const updateInfo = await users.findOneAndUpdate(
+    {_id},
+    {$set: { resume: resumeText }},
+    {returnDocument: "after"}
+  );
+
+  if (!updateInfo.value){
+    throw "Error: could not update resume";
+  }
   return updateInfo.value;
 };

@@ -47,21 +47,6 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(
-  session({
-    name: "AuthCookie",
-    secret: "super secret session key",
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-      mongoUrl: mongoConfig.serverUrl + mongoConfig.database
-    }),
-    cookie: {
-      maxAge: 20 * 60 * 1000 // 20 minutes
-    }
-  })
-);
-
 const staticDir = express.static('public');
 
 const handlebarsInstance = exphbs.create({
@@ -81,7 +66,6 @@ const handlebarsInstance = exphbs.create({
 
 app.use('/public', staticDir);
 app.use(express.json());
-// constructorMethod(app);
 app.use(express.urlencoded({ extended: true }));
 
 app.engine('handlebars', handlebarsInstance.engine);

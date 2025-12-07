@@ -1,4 +1,42 @@
 <main>
-  <h1>My Account</h1>
-  <p>shane will work on this page</p>
+  <h1>My Info</h1>
+
+  {{#if error}}
+    <p class="error" id="resumeError">{{error}}</p>
+  {{else}}
+    <p class="error" id="resumeError"></p>
+  {{/if}}
+
+  {{#if showAuthPrompt}}
+    <p>You need an account to view and save your information.</p>
+    <div class="account-actions">
+      <a href="/auth/login" class="btn">Login</a>
+      <a href="/auth/register" class="btn secondary">Register</a>
+    </div>
+  {{else}}
+    <p>
+      Welcome,
+      {{#if currentUser}}
+        {{currentUser.firstName}} {{currentUser.lastName}}
+      {{else}}
+        user
+      {{/if}}!
+    </p>
+
+    <section id="resume-section">
+      <h3>Paste your resume</h3>
+      <form id="resume-form" method="post" action="/account/resume">
+        <textarea
+          id="resumeText"
+          name="resumeText"
+          rows="10"
+          style="width:100%"
+        >{{resumeText}}</textarea>
+
+        <button type="submit" class="btn">Save resume</button>
+      </form>
+    </section>
+
+    <script src="/public/js/account.js"></script>
+  {{/if}}
 </main>
