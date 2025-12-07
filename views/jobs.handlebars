@@ -18,9 +18,15 @@
     </datalist>
 
     {{!-- Fields --}}
+    <label for="agency">Agency</label>
+
     <input id="agency" name="agency" type="text" autoComplete="on" list="agencyList" placeholder="Select an Agency" />
+    <label for="title">Job Title</label>
     <input id="title" name="title" type="text" autoComplete="on" list="titleList" placeholder="Select a Job Title" />
+
+    <label for="keywords">Keywords</label>
     <input id="keywords" name="keywords" type="text" placeholder="Enter Job Keywords" />
+    <label for="borough">Borough</label>
     <select id="borough" name="borough">
       <option selected value="">Any Borough</option>
       <option value="Manhattan">Manhattan</option>
@@ -30,8 +36,10 @@
       <option value="Brooklyn">Brooklyn</option>
     </select>
 
+    <label for="minDate">Posted Since</label>
     <input id="minDate" name="minDate" type="date" />
 
+    <label for="salaryRangeValue">Salary Range</label>
     <div id="salaryRangeContainer">
       <input type="text" id="salaryRangeValue" readonly>
       <div id="salarySlider"></div>
@@ -43,8 +51,12 @@
 
     <input id="page" name="page" type="number" value="{{pageInfo.page}}" min="1" max="{{pageInfo.maxPage}}" hidden
       readonly>
+    <label for="nonResidency">Open to Non-Residents</label>
     <input id="nonResidency" name="nonResidency" type="checkbox" checked />
+
+    <label for="fullTime">Full Time Only</label>
     <input id="fullTime" name="fullTime" type="checkbox" />
+    <label for="numPerPage"> Results Per Page</label>
     <select id="numPerPage" name="numPerPage">
       <option value="10" selected>10</option>
       <option value="20">20</option>
@@ -54,7 +66,7 @@
 
     {{#if isAuthenticated}}
     <select id="jobTag" name="jobTag">
-      <option value="" selected>Job Tag</option>
+      <option value="" selected>Any Job Tag</option>
       <option value="Applied">Applied</option>
       <option value="Rejected">Rejected</option>
       <option value="Interview Scheduled">Interview Scheduled</option>
@@ -66,16 +78,6 @@
     <button id="submitSearchWithResume" name="submitSearchWithResume">Search with My Resume</button>
     <button id="resetSearch" name="resetSearch">Reset</button>
 
-    {{!-- Labels --}}
-    <label for="agency">Agency</label>
-    <label for="title">Job Title</label>
-    <label for="borough">Borough</label>
-    <label for="salaryRangeValue">Salary Range</label>
-    <label for="keywords">Keywords</label>
-    <label for="nonResidency">Open to Non-Residents</label>
-    <label for="fullTime">Full Time Only</label>
-    <label for="minDate">Posted Since</label>
-    <label for="numPerPage"> Results Per Page</label>
     {{#if isAuthenticated}}
     <label for="jobTag">Job Tag</label>
     {{/if}}
@@ -92,11 +94,46 @@
   </div>
 
   <div id="jobListings">
-    {{#each jobs}}
-    <div class="listing">
+    {{!-- {{#each jobs}}
+    <div class="listing" id="{{_id}}">
       <p>{{title}}</p>
+      {{#if ../isAuthenticated}}
+      <form class="selectJobForm">
+        <label>
+          Select a Job Tag
+          <select class="tag" name="tag">
+            <option value="">Tag this job</option>
+            <option value="Applied">Applied</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Interview Scheduled">Interview Scheduled</option>
+            <option value="Offer Received">Offer Received</option>
+            <option value="Remove Tag">Remove Tag</option>
+          </select>
+        </label>
+
+        <div class="subForm" hidden>
+          <label>
+            Notes
+            <textarea class="notes" name="notes" placeholder="Notes"></textarea>
+          </label>
+          <label>
+            Confidence (1-10)
+            <input class="confidence" type="number" min="1" max="10" value="5">
+          </label>
+          <button class="submitTag" name="submitTag">Submit</button>
+          <button class="removeTag" name="removeTag">Remove Tag</button>
+        </div>
+      </form>
+      <div class="tagError" hidden>
+        <ul class="tagErrorList">
+
+        </ul>
+      </div>
+
+
+      {{/if}}
     </div>
-    {{/each}}
+    {{/each}} --}}
   </div>
 
   <div id="pageControls">

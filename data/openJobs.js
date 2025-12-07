@@ -96,7 +96,7 @@ export const filterJobs = async (jobOpts) => {
             const jobIdsMatchingJobTag = [];
             user.taggedJobs.forEach((job) => {
                 if (job.applicationStatus.toLowerCase() === jobOpts.jobTag.toLowerCase()) {
-                    jobIdsMatchingJobTag.push(job.jobId);
+                    jobIdsMatchingJobTag.push(new ObjectId(job.jobId));
                 }
             });
 

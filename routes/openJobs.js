@@ -18,9 +18,9 @@ router.get("/", async (req, res) => {
             isAuthenticated = true;
         }
 
-        return res.render('jobs', { title: pageTitle, jobs: searchResponse.jobs, pageInfo: searchResponse.pageInfo, dropdownOptions: dropdownOptions, isAuthenticated: isAuthenticated });
+        return res.render('jobs', { title: pageTitle, jobs: searchResponse.jobs, pageInfo: searchResponse.pageInfo, dropdownOptions: dropdownOptions, isAuthenticated });
     } catch (e) {
-        return res.render('jobs', { title: pageTitle, error: e });
+        return res.render('jobs', { title: pageTitle, error: e, isAuthenticated });
     }
 });
 
@@ -43,7 +43,7 @@ router.post("/search", async (req, res) => {
     if (Boolean(searchFields.useResume)) {
         if (!isAuthenticated) {
             // If an unauthenticated user clicks "search with my resume" redirect them to the login page
-            return res.render('login'); // TODO: check if other parameters must be passed to the login page
+            return res.rerdirect('login'); // TODO: check if other parameters must be passed to the login page
         } else {
             // Find the user's resume
             if (!user.resume) throw "Error: you have not supplied a resume. Please enter one on your profile or click 'Search' to search without it" // should this just redirect to the account page?

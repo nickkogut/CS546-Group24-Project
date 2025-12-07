@@ -1,6 +1,6 @@
 // routes/index.js
 
-// import usersRoutes from "./users.js";
+import userRoutes from "./user.js";
 import openJobsRoutes from "./openJobs.js";
 // import payrollRoutes from "./payroll.js";
 // import analysisRoutes from "./analysis.js";
@@ -25,8 +25,8 @@ const constructorMethod = (app) => {
   });
 
   app.use('/jobs', openJobsRoutes);
-
   app.use('/compare', jobCompareRoutes);
+  app.use('/user', userRoutes);
 
   // app.use('/account', usersRoutes);
 

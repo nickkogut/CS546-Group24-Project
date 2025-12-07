@@ -105,21 +105,49 @@ export const addHeldJob = async (userId, jobData) => {
 
 export const addTaggedJob = async (userId, taggedJobData) => {
   const _id = _idToObjectId(userId);
-  const users = await usersCollection();
+  const jobId = _idToObjectId(taggedJobData.jobId); // unused, throws if invalid
 
   const taggedJob = {
     jobId: checkString(taggedJobData.jobId),
     applicationStatus: checkString(taggedJobData.applicationStatus),
     notes: taggedJobData.notes || "",
-    confidence: typeof taggedJobData.confidence === "number" ? taggedJobData.confidence : 0
+    confidence: typeof taggedJobData.confidence === "number" ? taggedJobData.confidence : 5
   };
 
-  const updateInfo = await users.findOneAndUpdate(
-    { _id },
-    { $push: { taggedJobs: taggedJob } },
-    { returnDocument: "after" }
+  if (taggedJob.notes.length > 500) throw "Error: notes must be <= 500 chars";
+
+  const users = await usersCollection();
+
+  let updateInfo = await users.updateOne(
+    { _id: new ObjectId(userId), "taggedJobs.jobId": taggedJob.jobId },
+    { $set: { "taggedJobs.$": taggedJob } }
   );
 
-  if (!updateInfo.value) throw "Error: could not add tagged job";
-  return updateInfo.value;
+  if (updateInfo.matchedCount === 0) {
+    updateInfo = await users.updateOne(
+      { _id: new ObjectId(userId) },
+      { $push: { taggedJobs: taggedJob } }
+    );
+  }
+
+  if (!updateInfo) throw "Error: could not add tagged job";
+  return updateInfo;
 };
+
+export const removeTaggedJob = async (userId, jobId) => {
+  const _id = _idToObjectId(checkString(userId));
+  jobId = checkString(jobId);
+  if (!ObjectId.isValid(jobId)) throw "Error: invalid ObjectId";
+
+  const users = await usersCollection();
+
+  const removalInfo = await users.updateOne(
+    { _id: _id },
+    { $pull: { taggedJobs: { jobId: jobId } } },
+
+  );
+
+  if (!removalInfo) throw "Error: failed to remove job status";
+  return removalInfo;
+
+}
