@@ -11,7 +11,10 @@
       <div class="message success">{{msg}}</div>
     {{/if}}
 
-    <form method="POST" action="/auth/login">
+      {{!-- front-end validation error display --}}
+    <div id="client-error" class="message error" style="display:none;"></div>
+
+    <form id="login-form" method="POST" action="/auth/login">
       <div class="field">
         <label>Email</label>
         <input type="email" name="email" required />
