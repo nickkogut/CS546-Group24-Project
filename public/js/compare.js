@@ -1,7 +1,7 @@
 // public/js/compare.js
 (() => {
   document.addEventListener("DOMContentLoaded", () => {
-    // === Unified graph section elements ===
+    // Graph
     const jobSelect = document.getElementById("jobSelect");
     const salaryInput = document.getElementById("salaryInput");
     const chartTypeSelect = document.getElementById("chartType");
@@ -14,13 +14,32 @@
     const filterMinSalary = document.getElementById("filterMinSalary");
     const listingLink = document.getElementById("listingLink");
 
-    // === Job Stats elements ===
+    // Job stats transitions
     const fromJobInput = document.getElementById("fromJobInput");
     const findTransitionsBtn = document.getElementById("findTransitionsBtn");
     const transitionsList = document.getElementById("transitionsList");
     const transitionsStatus = document.getElementById("transitionsStatus");
     const compareSelectedBtn = document.getElementById("compareSelectedBtn");
     const compareResults = document.getElementById("compareResults");
+
+    // Advanced jobs
+    const advAgency = document.getElementById("advAgency");
+    const advBorough = document.getElementById("advBorough");
+    const advYearFrom = document.getElementById("advYearFrom");
+    const advYearTo = document.getElementById("advYearTo");
+    const advMinAvg = document.getElementById("advMinAvg");
+    const advMinCount = document.getElementById("advMinCount");
+    const advancedJobsBtn = document.getElementById("advancedJobsBtn");
+    const advancedJobsStatus = document.getElementById("advancedJobsStatus");
+    const advancedJobsResults = document.getElementById("advancedJobsResults");
+
+    // Experience stats
+    const expJobSelect = document.getElementById("expJobSelect");
+    const expMinYears = document.getElementById("expMinYears");
+    const expMaxYears = document.getElementById("expMaxYears");
+    const expStatsBtn = document.getElementById("expStatsBtn");
+    const expStatus = document.getElementById("expStatus");
+    const experienceResults = document.getElementById("experienceResults");
 
     let chartInstance = null;
 
@@ -34,9 +53,7 @@
       return rawArr
         .map((s) => {
           if (s === null || s === undefined) return NaN;
-          if (typeof s === "string") {
-            s = s.replace(/[,$\s]/g, "");
-          }
+          if (typeof s === "string") s = s.replace(/[,$\s]/g, "");
           return Number(s);
         })
         .filter((v) => Number.isFinite(v) && v >= 0)
@@ -47,9 +64,7 @@
       if (ch) {
         try {
           ch.destroy();
-        } catch (_) {
-          // ignore
-        }
+        } catch (_) {}
       }
     }
 
@@ -62,7 +77,6 @@
       if (typeof userSalary === "number" && Number.isFinite(userSalary)) {
         maxSalary = Math.max(maxSalary, userSalary);
       }
-
       if (maxSalary < 10000) maxSalary = 10000;
 
       let rawBin = Math.ceil(maxSalary / 10);
@@ -85,18 +99,6 @@
       salaries.forEach((s) => {
         const b = bins.find((bin) => s >= bin.start && s < bin.end);
         if (b) b.count++;
-        else {
-          const last = bins[bins.length - 1];
-          const newStart = last.end;
-          bins.push({
-            start: newStart,
-            end: newStart + binSize,
-            count: 1,
-            label: `${formatMoney(newStart)} - ${formatMoney(
-              newStart + binSize
-            )}`,
-          });
-        }
       });
 
       if (typeof userSalary === "number" && Number.isFinite(userSalary)) {
@@ -190,109 +192,104 @@
       });
     }
 
-function renderBoxplot(salaries, userSalary) {
-  if (!histCtx) return;
+    function renderBoxplot(salaries, userSalary) {
+      if (!histCtx) return;
 
-  const cleaned = cleanAndSortSalaries(salaries);
-  if (!cleaned.length) {
-    statusP.textContent = "No salary data to show.";
-    destroyChart(chartInstance);
-    return;
-  }
+      const cleaned = cleanAndSortSalaries(salaries);
+      if (!cleaned.length) {
+        statusP.textContent = "No salary data to show.";
+        destroyChart(chartInstance);
+        return;
+      }
 
-  // Insert the user's salary into the dataset before calculating box stats
-  let data = cleaned.slice();
-  let showUser = false;
+      let data = cleaned.slice();
+      let showUser = false;
 
-  if (typeof userSalary === "number" && Number.isFinite(userSalary) && userSalary >= 0) {
-    data.push(userSalary);
-    showUser = true;
-  }
+      if (
+        typeof userSalary === "number" &&
+        Number.isFinite(userSalary) &&
+        userSalary >= 0
+      ) {
+        data.push(userSalary);
+        showUser = true;
+      }
 
-  data.sort((a, b) => a - b);
+      data.sort((a, b) => a - b);
 
-  const n = data.length;
+      const n = data.length;
+      const min = data[0];
+      const max = data[n - 1];
+      const q1Index = Math.floor((n - 1) * 0.25);
+      const medianIndex = Math.floor((n - 1) * 0.5);
+      const q3Index = Math.floor((n - 1) * 0.75);
+      const q1 = data[q1Index];
+      const median = data[medianIndex];
+      const q3 = data[q3Index];
 
-  const min = data[0];
-  const max = data[n - 1];
+      const datasets = [
+        {
+          label: "Salary Distribution",
+          data: [min, q1, median, q3, max],
+          backgroundColor: [
+            "rgba(100,100,255,0.6)",
+            "rgba(100,150,255,0.6)",
+            "rgba(100,200,255,0.6)",
+            "rgba(100,150,255,0.6)",
+            "rgba(100,100,255,0.6)",
+          ],
+          borderWidth: 1,
+        },
+      ];
 
-  // True quartile positions
-  const q1Index = Math.floor((n - 1) * 0.25);
-  const medianIndex = Math.floor((n - 1) * 0.5);
-  const q3Index = Math.floor((n - 1) * 0.75);
+      if (showUser) {
+        const positions = [null, null, null, null, null];
+        if (userSalary === min) positions[0] = userSalary;
+        else if (userSalary === q1) positions[1] = userSalary;
+        else if (userSalary === median) positions[2] = userSalary;
+        else if (userSalary === q3) positions[3] = userSalary;
+        else if (userSalary === max) positions[4] = userSalary;
 
-  const q1 = data[q1Index];
-  const median = data[medianIndex];
-  const q3 = data[q3Index];
+        datasets.push({
+          label: "Your Salary",
+          data: positions,
+          backgroundColor: "rgba(255,0,0,0.8)",
+          borderColor: "red",
+          borderWidth: 2,
+          type: "bar",
+        });
+      }
 
-  // Main dataset (no mean anymore)
-  const datasets = [
-    {
-      label: "Salary Distribution",
-      data: [min, q1, median, q3, max],
-      backgroundColor: [
-        "rgba(100,100,255,0.6)",
-        "rgba(100,150,255,0.6)",
-        "rgba(100,200,255,0.6)",
-        "rgba(100,150,255,0.6)",
-        "rgba(100,100,255,0.6)",
-      ],
-      borderWidth: 1,
-    },
-  ];
-
-  if (showUser) {
-    // Determine which box slot the user's salary aligns with
-    const positions = [null, null, null, null, null];
-
-    if (userSalary === min) positions[0] = userSalary;
-    else if (userSalary === q1) positions[1] = userSalary;
-    else if (userSalary === median) positions[2] = userSalary;
-    else if (userSalary === q3) positions[3] = userSalary;
-    else if (userSalary === max) positions[4] = userSalary;
-
-    datasets.push({
-      label: "Your Salary",
-      data: positions,
-      backgroundColor: "rgba(255,0,0,0.8)",
-      borderColor: "red",
-      borderWidth: 2,
-      type: "bar",
-    });
-  }
-
-  destroyChart(chartInstance);
-  chartInstance = new Chart(histCtx, {
-    type: "bar",
-    data: {
-      labels: ["Min", "Q1", "Median", "Q3", "Max"],
-      datasets,
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { display: showUser },
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              if (context.dataset.label === "Your Salary") {
-                return "Your Salary: " + formatMoney(context.parsed.y);
-              }
-              return `${context.label}: ${formatMoney(context.parsed.y)}`;
+      destroyChart(chartInstance);
+      chartInstance = new Chart(histCtx, {
+        type: "bar",
+        data: {
+          labels: ["Min", "Q1", "Median", "Q3", "Max"],
+          datasets,
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: showUser },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  if (context.dataset.label === "Your Salary") {
+                    return "Your Salary: " + formatMoney(context.parsed.y);
+                  }
+                  return `${context.label}: ${formatMoney(context.parsed.y)}`;
+                },
+              },
+            },
+          },
+          scales: {
+            y: {
+              title: { display: true, text: "Salary" },
+              beginAtZero: false,
             },
           },
         },
-      },
-      scales: {
-        y: {
-          title: { display: true, text: "Salary" },
-          beginAtZero: false,
-        },
-      },
-    },
-  });
-}
-
+      });
+    }
 
     function renderDotplot(salaries, userSalary) {
       if (!histCtx) return;
@@ -453,7 +450,7 @@ function renderBoxplot(salaries, userSalary) {
 
         const fromTitle = (fromJobInput.value || "").trim();
         if (!fromTitle) {
-          transitionsStatus.textContent = "Enter a job title.";
+          transitionsStatus.textContent = "Select a job.";
           return;
         }
 
@@ -579,6 +576,145 @@ function renderBoxplot(salaries, userSalary) {
         } catch (e) {
           compareResults.innerHTML =
             "<p style='color:darkred'>Error comparing jobs. Check console.</p>";
+          console.error(e);
+        }
+      });
+    }
+
+    if (advancedJobsBtn) {
+      advancedJobsBtn.addEventListener("click", async () => {
+        advancedJobsStatus.textContent = "";
+        advancedJobsResults.innerHTML = "";
+
+        const filters = {};
+        if (advAgency.value) filters.agency = advAgency.value.trim();
+        if (advBorough.value) filters.borough = advBorough.value.trim();
+
+        if (advYearFrom.value) {
+          const v = Number(advYearFrom.value);
+          if (Number.isFinite(v)) filters.yearFrom = v;
+        }
+        if (advYearTo.value) {
+          const v = Number(advYearTo.value);
+          if (Number.isFinite(v)) filters.yearTo = v;
+        }
+        if (advMinAvg.value) {
+          const v = Number(advMinAvg.value);
+          if (Number.isFinite(v)) filters.minAvgSalary = v;
+        }
+        if (advMinCount.value) {
+          const v = Number(advMinCount.value);
+          if (Number.isFinite(v)) filters.minCount = v;
+        }
+
+        try {
+          const res = await fetch("/compare/advancedJobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filters }),
+          });
+          if (!res.ok) {
+            advancedJobsStatus.textContent = "Server error. See console.";
+            console.error("advancedJobs non-ok", await res.text());
+            return;
+          }
+          const json = await res.json();
+          const jobs = Array.isArray(json.jobs) ? json.jobs : [];
+
+          if (!jobs.length) {
+            advancedJobsStatus.textContent = "No jobs matched those filters.";
+            return;
+          }
+
+          let html = "<table border='1' cellpadding='6'><tr><th>Job Title</th><th>Avg Salary</th><th>Entries</th><th>Year Range</th></tr>";
+          jobs.forEach((j) => {
+            const yr =
+              j.minYear && j.maxYear
+                ? `${j.minYear} – ${j.maxYear}`
+                : "(n/a)";
+            html += `<tr>
+              <td>${escapeHtml(j.title)}</td>
+              <td>${j.avgSalary ? formatMoney(j.avgSalary) : "(n/a)"}</td>
+              <td>${j.count}</td>
+              <td>${yr}</td>
+            </tr>`;
+          });
+          html += "</table>";
+          advancedJobsResults.innerHTML = html;
+        } catch (e) {
+          advancedJobsStatus.textContent =
+            "Error loading jobs. Check console.";
+          console.error(e);
+        }
+      });
+    }
+
+    if (expStatsBtn) {
+      expStatsBtn.addEventListener("click", async () => {
+        expStatus.textContent = "";
+        experienceResults.innerHTML = "";
+
+        const title = expJobSelect ? expJobSelect.value : "";
+        if (!title) {
+          expStatus.textContent = "Select a job.";
+          return;
+        }
+
+        let minYears;
+        let maxYears;
+
+        if (expMinYears.value !== "") {
+          const v = Number(expMinYears.value);
+          if (Number.isFinite(v)) minYears = v;
+        }
+
+        if (expMaxYears.value !== "") {
+          const v = Number(expMaxYears.value);
+          if (Number.isFinite(v)) maxYears = v;
+        }
+        
+        try {
+          const res = await fetch("/compare/experienceStats", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title, minYears, maxYears }),
+          });
+          if (!res.ok) {
+            expStatus.textContent = "Server error. See console.";
+            console.error("experienceStats non-ok", await res.text());
+            return;
+          }
+          const stats = await res.json();
+
+          if (!stats.count) {
+            expStatus.textContent =
+              "No records found for that experience range.";
+            return;
+          }
+
+          experienceResults.innerHTML = `
+            <table border="1" cellpadding="6">
+              <tr><th colspan="2">${escapeHtml(
+                stats.title
+              )} (${stats.minYears || 0}–${stats.maxYears || "∞"} years)</th></tr>
+              <tr><td>Entries</td><td>${stats.count}</td></tr>
+              <tr><td>Avg Salary</td><td>${
+                stats.avg ? formatMoney(stats.avg) : "(n/a)"
+              }</td></tr>
+              <tr><td>Median Salary</td><td>${
+                stats.median ? formatMoney(stats.median) : "(n/a)"
+              }</td></tr>
+              <tr><td>Min Salary</td><td>${
+                stats.min ? formatMoney(stats.min) : "(n/a)"
+              }</td></tr>
+              <tr><td>Max Salary</td><td>${
+                stats.max ? formatMoney(stats.max) : "(n/a)"
+              }</td></tr>
+            </table>
+          `;
+        } catch (e) {
+          expStatus.textContent =
+            "Error loading experience stats. Check console.";
           console.error(e);
         }
       });
