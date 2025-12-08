@@ -29,9 +29,7 @@ const jobTagForm = `
 <ul class="tagErrorList">
 
 </ul>
-</div>`;
-
-
+</div>`; // Inserted into each job listing when viewed by an authenticated user
 
 
 const updateSliderDisplay = (min, max) => {

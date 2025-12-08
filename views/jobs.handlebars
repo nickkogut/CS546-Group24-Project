@@ -1,6 +1,12 @@
 <main>
-  <h1>Jobs</h1>
-  <p>Nick is doing this one.</p>
+  <h1>Open Jobs</h1>
+  <div id="pageDesc">
+    <p>Browse the open job postings that best meet your criteria! <a href="/auth/login">Login</a> to upload a resume for
+      more
+      personalized resume-based suggestions, or to save jobs for later</p>
+  </div>
+  <br>
+
 
   <form id="openJobSearch" name="openJobSearch" method="post" action="/jobs">
 
@@ -94,46 +100,7 @@
   </div>
 
   <div id="jobListings">
-    {{!-- {{#each jobs}}
-    <div class="listing" id="{{_id}}">
-      <p>{{title}}</p>
-      {{#if ../isAuthenticated}}
-      <form class="selectJobForm">
-        <label>
-          Select a Job Tag
-          <select class="tag" name="tag">
-            <option value="">Tag this job</option>
-            <option value="Applied">Applied</option>
-            <option value="Rejected">Rejected</option>
-            <option value="Interview Scheduled">Interview Scheduled</option>
-            <option value="Offer Received">Offer Received</option>
-            <option value="Remove Tag">Remove Tag</option>
-          </select>
-        </label>
-
-        <div class="subForm" hidden>
-          <label>
-            Notes
-            <textarea class="notes" name="notes" placeholder="Notes"></textarea>
-          </label>
-          <label>
-            Confidence (1-10)
-            <input class="confidence" type="number" min="1" max="10" value="5">
-          </label>
-          <button class="submitTag" name="submitTag">Submit</button>
-          <button class="removeTag" name="removeTag">Remove Tag</button>
-        </div>
-      </form>
-      <div class="tagError" hidden>
-        <ul class="tagErrorList">
-
-        </ul>
-      </div>
-
-
-      {{/if}}
-    </div>
-    {{/each}} --}}
+    {{!-- Filled after an AJAX request --}}
   </div>
 
   <div id="pageControls">
