@@ -175,13 +175,13 @@ SKILLS
                 "jobId": savedIds.openJobs[0],
                 "applicationStatus": "Applied",
                 "notes": "Near grandma's house, good pay.",
-                "confidence": "High",
+                "confidence": 7,
             },
             {
                 "jobId": savedIds.openJobs[1],
                 "applicationStatus": "Interview Scheduled",
                 "notes": "I don't meet half the requirements but they have a free cafeteria so I'm trying.",
-                "confidence": "Low",
+                "confidence": 2,
             }
         ]
     }
