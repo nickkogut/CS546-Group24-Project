@@ -15,41 +15,30 @@ function salaryFromDoc(doc) {
   return null;
 }
 
-/* ===============================
-   LIST UNIQUE JOB TITLES
-   =============================== */
+// list unique job titles
 export async function getAllPayrollTitles() {
   const col = await _getCollection();
   const docs = await col.find({}).project({ title: 1 }).toArray();
-
   const set = new Set(
-    docs
-      .map((d) => (d.title || "").trim())
-      .filter((t) => t.length > 0)
+    docs.map((d) => (d.title || "").trim()).filter((t) => t.length > 0)
   );
-
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
-/* ===============================
-   RAW SALARIES FOR ONE JOB
-   =============================== */
+// salaries for one job
 export async function getPayrollSalaries(title) {
   if (!title) throw "Missing title";
-
   const col = await _getCollection();
   const docs = await col.find({ title }).toArray();
-
   return docs
     .map((d) => salaryFromDoc(d))
     .filter((v) => v !== null && Number.isFinite(v));
 }
 
-/* ===============================
-   CAREER TRANSITIONS
-   =============================== */
+// transitions
 export async function getCareerTransitions(fromTitle, limit = 5) {
-  if (!fromTitle || typeof fromTitle !== "string") throw "fromTitle must be string";
+  if (!fromTitle || typeof fromTitle !== "string")
+    throw "fromTitle must be string";
 
   const col = await _getCollection();
 
@@ -105,9 +94,7 @@ export async function getCareerTransitions(fromTitle, limit = 5) {
   return arr.slice(0, limit);
 }
 
-/* ===============================
-   JOB STATS (SIDE-BY-SIDE COMPARE)
-   =============================== */
+// stats for side-by-side compare
 export async function getJobStats(title, filters = {}) {
   if (!title) throw "Missing title";
 
@@ -116,7 +103,6 @@ export async function getJobStats(title, filters = {}) {
 
   if (filters.agency) q.agency = filters.agency;
   if (filters.borough) q.borough = filters.borough;
-
   if (typeof filters.minSalary === "number") {
     q.$or = [
       { startSalary: { $gte: filters.minSalary } },
@@ -124,7 +110,10 @@ export async function getJobStats(title, filters = {}) {
     ];
   }
 
-  const docs = await col.find(q).project({ startSalary: 1, endSalary: 1 }).toArray();
+  const docs = await col
+    .find(q)
+    .project({ startSalary: 1, endSalary: 1 })
+    .toArray();
 
   const sals = docs
     .map((d) => salaryFromDoc(d))
@@ -144,22 +133,19 @@ export async function getJobStats(title, filters = {}) {
     avg: sum / n,
     min: sals[0],
     max: sals[n - 1],
-    median: n % 2 ? sals[mid] : (sals[mid - 1] + sals[mid]) / 2
+    median:
+      n % 2 ? sals[mid] : (sals[mid - 1] + sals[mid]) / 2,
   };
 }
 
-/* ===============================
-   LIST OF SALARIES FOR GRAPH
-   =============================== */
+// list of salaries for graph
 export async function getAllSalariesForJob(title, filters = {}) {
   if (!title) throw "Missing title";
-
   const col = await _getCollection();
-  const q = { title };
 
+  const q = { title };
   if (filters.agency) q.agency = filters.agency;
   if (filters.borough) q.borough = filters.borough;
-
   if (typeof filters.minSalary === "number") {
     q.$or = [
       { startSalary: { $gte: filters.minSalary } },
@@ -177,16 +163,12 @@ export async function getAllSalariesForJob(title, filters = {}) {
     .filter((v) => Number.isFinite(v));
 }
 
-/* ===============================
-   PLACEHOLDER LISTING URL
-   =============================== */
+// placeholder listing URL
 export async function getJobListingUrl() {
   return null;
 }
 
-/* ===============================
-   ADVANCED JOB LIST (FIXED)
-   =============================== */
+// advanced job list
 export async function getAdvancedJobList(filters = {}) {
   const col = await _getCollection();
   const q = {};
@@ -194,7 +176,6 @@ export async function getAdvancedJobList(filters = {}) {
   if (filters.agency) q.agency = filters.agency;
   if (filters.borough) q.borough = filters.borough;
 
-  // year filters
   if (typeof filters.yearFrom === "number") {
     q.endYear = Object.assign({}, q.endYear, { $gte: filters.yearFrom });
   }
@@ -204,7 +185,13 @@ export async function getAdvancedJobList(filters = {}) {
 
   const docs = await col
     .find(q)
-    .project({ title: 1, startSalary: 1, endSalary: 1, startYear: 1, endYear: 1 })
+    .project({
+      title: 1,
+      startSalary: 1,
+      endSalary: 1,
+      startYear: 1,
+      endYear: 1,
+    })
     .toArray();
 
   const stats = {};
@@ -213,42 +200,28 @@ export async function getAdvancedJobList(filters = {}) {
     const t = (d.title || "").trim();
     if (!t) continue;
 
-    let sy = Number(d.startYear);
-    let ey = Number(d.endYear);
-
-    // sanitize broken years
-    if (!Number.isFinite(sy) || sy < 1900 || sy > 2100) sy = null;
-    if (!Number.isFinite(ey) || ey < 1900 || ey > 2100) ey = null;
-
     const sal = salaryFromDoc(d);
+    const sy = Number(d.startYear);
+    const ey = Number(d.endYear);
 
     if (!stats[t]) {
       stats[t] = {
-        count: 0,
         total: 0,
         countSal: 0,
+        count: 0,
         minYear: sy,
-        maxYear: ey
+        maxYear: ey,
       };
     }
 
     const s = stats[t];
     s.count++;
-
     if (sal !== null && Number.isFinite(sal)) {
       s.total += sal;
       s.countSal++;
     }
-
-    if (sy !== null) {
-      if (s.minYear === null) s.minYear = sy;
-      else s.minYear = Math.min(s.minYear, sy);
-    }
-
-    if (ey !== null) {
-      if (s.maxYear === null) s.maxYear = ey;
-      else s.maxYear = Math.max(s.maxYear, ey);
-    }
+    if (Number.isFinite(sy)) s.minYear = Math.min(s.minYear, sy);
+    if (Number.isFinite(ey)) s.maxYear = Math.max(s.maxYear, ey);
   }
 
   let arr = Object.keys(stats).map((t) => {
@@ -258,14 +231,15 @@ export async function getAdvancedJobList(filters = {}) {
       count: s.count,
       avgSalary: s.countSal ? s.total / s.countSal : null,
       minYear: s.minYear,
-      maxYear: s.maxYear
+      maxYear: s.maxYear,
     };
   });
 
   if (typeof filters.minAvgSalary === "number") {
-    arr = arr.filter((j) => j.avgSalary !== null && j.avgSalary >= filters.minAvgSalary);
+    arr = arr.filter(
+      (j) => j.avgSalary !== null && j.avgSalary >= filters.minAvgSalary
+    );
   }
-
   if (typeof filters.minCount === "number") {
     arr = arr.filter((j) => j.count >= filters.minCount);
   }
@@ -274,9 +248,7 @@ export async function getAdvancedJobList(filters = {}) {
   return arr;
 }
 
-/* ===============================
-   EXPERIENCE STATS (FIXED)
-   =============================== */
+// FIXED experience-based stats
 export async function getExperienceStats(title, minYears, maxYears, filters = {}) {
   if (!title) throw "Missing title";
 
@@ -299,12 +271,9 @@ export async function getExperienceStats(title, minYears, maxYears, filters = {}
   const sals = [];
 
   for (const d of docs) {
-    let sy = Number(d.startYear);
-    let ey = Number(d.endYear);
-
-    // sanitize broken years
-    if (!Number.isFinite(sy) || sy < 1900 || sy > 2100) continue;
-    if (!Number.isFinite(ey) || ey < 1900 || ey > 2100) continue;
+    const sy = Number(d.startYear);
+    const ey = Number(d.endYear);
+    if (!Number.isFinite(sy) || !Number.isFinite(ey)) continue;
 
     const yrs = ey - sy;
 
@@ -331,6 +300,7 @@ export async function getExperienceStats(title, minYears, maxYears, filters = {}
     avg: sum / n,
     min: sals[0],
     max: sals[n - 1],
-    median: n % 2 ? sals[mid] : (sals[mid - 1] + sals[mid]) / 2
+    median:
+      n % 2 ? sals[mid] : (sals[mid - 1] + sals[mid]) / 2,
   };
 }

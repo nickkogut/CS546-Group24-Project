@@ -8,9 +8,10 @@ import {
   getAllSalariesForJob,
   getJobListingUrl,
   getAdvancedJobList,
-  getExperienceStats,
-  payrollJobs
+  getExperienceStats
 } from "../data/payrollJobs.js";
+
+import { payrollJobs } from "../config/mongoCollections.js";
 
 const router = Router();
 
@@ -21,7 +22,6 @@ router.get("/", async (req, res) => {
   try {
     const titles = await getAllPayrollTitles();
 
-    // Load dropdown data for Agency, Borough, and Years
     const col = await payrollJobs();
     const docs = await col
       .find({})
@@ -53,7 +53,6 @@ router.get("/", async (req, res) => {
   }
 });
 
-
 /* ===============================
    BASIC GRAPH SALARY DATA
    =============================== */
@@ -61,7 +60,6 @@ router.post("/data", async (req, res) => {
   try {
     const { jobTitle } = req.body;
     if (!jobTitle) return res.status(400).json({ error: "Missing jobTitle" });
-
     const salaries = await getPayrollSalaries(jobTitle);
     res.json({ salaries });
 
@@ -70,14 +68,13 @@ router.post("/data", async (req, res) => {
   }
 });
 
-
 /* ===============================
    CAREER TRANSITIONS
    =============================== */
 router.post("/transitions", async (req, res) => {
   try {
     const { fromTitle } = req.body;
-    if (!fromTitle) return res.status(400).json({ error: "fromTitle is required" });
+    if (!fromTitle) return res.status(400).json({ error: "fromTitle required" });
 
     const transitions = await getCareerTransitions(fromTitle, 10);
     res.json({ transitions });
@@ -86,7 +83,6 @@ router.post("/transitions", async (req, res) => {
     res.status(500).json({ error: e.toString() });
   }
 });
-
 
 /* ===============================
    SIDE-BY-SIDE JOB COMPARISON
@@ -126,7 +122,6 @@ router.post("/compareJobs", async (req, res) => {
   }
 });
 
-
 /* ===============================
    GRAPH DATA WITH FILTERS
    =============================== */
@@ -145,14 +140,12 @@ router.post("/graphData", async (req, res) => {
   }
 });
 
-
 /* ===============================
-   ADVANCED JOB LIST (fixed)
+   ADVANCED JOB LIST
    =============================== */
 router.post("/advancedJobs", async (req, res) => {
   try {
     const { filters } = req.body;
-
     const jobs = await getAdvancedJobList(filters || {});
     res.json({ jobs });
 
@@ -160,7 +153,6 @@ router.post("/advancedJobs", async (req, res) => {
     res.status(500).json({ error: e.toString() });
   }
 });
-
 
 /* ===============================
    EXPERIENCE-BASED SALARY STATS
@@ -171,14 +163,8 @@ router.post("/experienceStats", async (req, res) => {
 
     if (!title) return res.status(400).json({ error: "title required" });
 
-    // treat blank or null as no bound ("infinity")
-    minYears = (minYears === "" || minYears === null || minYears === undefined)
-      ? undefined
-      : Number(minYears);
-
-    maxYears = (maxYears === "" || maxYears === null || maxYears === undefined)
-      ? undefined
-      : Number(maxYears);
+    minYears = (minYears === "" || minYears == null) ? undefined : Number(minYears);
+    maxYears = (maxYears === "" || maxYears == null) ? undefined : Number(maxYears);
 
     const stats = await getExperienceStats(title, minYears, maxYears, filters || {});
     res.json(stats);
