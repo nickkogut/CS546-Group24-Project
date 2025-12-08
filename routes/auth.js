@@ -6,38 +6,50 @@ import { users, passwordResetTokens } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
 import { checkString } from "../helpers.js";
 import { sendResetEmail } from "../config/email.js";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const router = Router();
 const SALT_ROUNDS = 10;
 
-// register
+// login user should not see login / register
+const redirectIfLoggedIn = (req, res, next) => {
+  if (req.session.user) {
+    // You can change this to "/" or "/home" or something similar
+    return res.redirect("/");
+  }
+  next();
+};
+
+// ---------------------------
 // POST /auth/register
+// ---------------------------
 router.post("/register", async (req, res) => {
   try {
-    let { firstName, lastName, email, password, borough, age } = req.body;
+    let { firstName, lastName, email, password, age } = req.body;
 
     firstName = checkString(firstName);
     lastName = checkString(lastName);
     email = checkString(email).toLowerCase();
     password = checkString(password);
 
-    if (!borough) borough = "Unknown";
-
-    const ageNum = parseInt(age);
-    if (Number.isNaN(ageNum) || ageNum <= 0) {
-      return res.status(400).json({ error: "Invalid age" });
+    let ageNum = null;
+    if (age && age.trim() !== "") {
+      ageNum = parseInt(age);
+      if (Number.isNaN(ageNum) || ageNum <= 0) {
+        return res.redirect(
+          "/auth/register?error=" +
+            encodeURIComponent("Age must be a positive integer.")
+        );
+      }
     }
 
     const usersCol = await users();
 
     const existing = await usersCol.findOne({ email });
     if (existing) {
-      return res.status(400).json({ error: "Email already registered" });
+      return res.redirect(
+        "/auth/register?error=" +
+          encodeURIComponent("Email is already registered.")
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
@@ -46,13 +58,12 @@ router.post("/register", async (req, res) => {
       firstName,
       lastName,
       email,
-      borough,
       age: ageNum,
       hashedPassword,
       public: true,
       resume: "",
       heldJobs: [],
-      taggedJobs: []
+      taggedJobs: [],
     };
 
     const insertInfo = await usersCol.insertOne(newUser);
@@ -60,24 +71,21 @@ router.post("/register", async (req, res) => {
       throw "Could not create user";
     }
 
-    newUser._id = insertInfo.insertedId;
-
-    // After registration, log in directly
-    req.session.user = {
-      _id: newUser._id.toString(),
-      email: newUser.email,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName
-    };
-
-    res.status(201).json({ message: "User registered and logged in", user: req.session.user });
+    // Registration successful → redirect to login page
+    return res.redirect(
+      "/auth/login?msg=" +
+        encodeURIComponent("Account created successfully. Please log in.")
+    );
   } catch (e) {
-    res.status(400).json({ error: e.toString() });
+    return res.redirect(
+      "/auth/register?error=" + encodeURIComponent(e.toString())
+    );
   }
 });
 
-// login
+// ---------------------------
 // POST /auth/login
+// ---------------------------
 router.post("/login", async (req, res) => {
   try {
     let { email, password } = req.body;
@@ -87,41 +95,56 @@ router.post("/login", async (req, res) => {
     const usersCol = await users();
     const user = await usersCol.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.redirect(
+        "/auth/login?error=" +
+          encodeURIComponent("Invalid email or password.")
+      );
     }
 
     const match = await bcrypt.compare(password, user.hashedPassword);
     if (!match) {
-      return res.status(400).json({ error: "Invalid email or password" });
+      return res.redirect(
+        "/auth/login?error=" +
+          encodeURIComponent("Invalid email or password.")
+      );
     }
 
     req.session.user = {
       _id: user._id.toString(),
       email: user.email,
       firstName: user.firstName,
-      lastName: user.lastName
+      lastName: user.lastName,
     };
 
-    res.json({ message: "Logged in", user: req.session.user });
+    // Login successful → redirect to home page or dashboard
+    return res.redirect("/");
   } catch (e) {
-    res.status(400).json({ error: e.toString() });
+    return res.redirect(
+      "/auth/login?error=" + encodeURIComponent(e.toString())
+    );
   }
 });
 
-// logout
+// ---------------------------
 // POST /auth/logout
+// ---------------------------
 router.post("/logout", async (req, res) => {
   if (!req.session.user) {
-    return res.status(200).json({ message: "Already logged out" });
+    return res.redirect(
+      "/auth/login?msg=" + encodeURIComponent("You are already logged out.")
+    );
   }
   req.session.destroy(() => {
     res.clearCookie("AuthCookie");
-    return res.json({ message: "Logged out" });
+    return res.redirect(
+      "/auth/login?msg=" + encodeURIComponent("You have been logged out.")
+    );
   });
 });
 
-// forgot password: send email
-// POST /auth/forgot
+// ---------------------------
+// POST /auth/forgot  send reset email
+// ---------------------------
 router.post("/forgot", async (req, res) => {
   try {
     let { email } = req.body;
@@ -130,8 +153,13 @@ router.post("/forgot", async (req, res) => {
     const usersCol = await users();
     const user = await usersCol.findOne({ email });
     if (!user) {
-      // For security, do not reveal that the account does not exist
-      return res.json({ message: "If this email is registered, a reset link has been sent." });
+      // Do not reveal whether the account exists
+      return res.redirect(
+        "/auth/forgot?msg=" +
+          encodeURIComponent(
+            "If this email is registered, a reset link has been sent."
+          )
+      );
     }
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -142,43 +170,66 @@ router.post("/forgot", async (req, res) => {
       userId: user._id,
       token,
       expiresAt,
-      used: false
+      used: false,
     });
 
-    // Reset link (frontend should have a corresponding page)
-    const resetLink = `http://localhost:3000/reset-password/${token}`;
+    // Reset link: change to actual route /auth/reset/:token
+    const resetLink = `http://localhost:3000/auth/reset/${token}`;
 
     await sendResetEmail(email, resetLink);
 
-    res.json({ message: "If this email is registered, a reset link has been sent." });
+    return res.redirect(
+      "/auth/forgot?msg=" +
+        encodeURIComponent(
+          "If this email is registered, a reset link has been sent."
+        )
+    );
   } catch (e) {
-    res.status(400).json({ error: e.toString() });
+    return res.redirect(
+      "/auth/forgot?error=" + encodeURIComponent(e.toString())
+    );
   }
 });
 
-// Verify if token is valid (optional, can be used by frontend to display form)
-// GET /auth/reset/:token
+// ---------------------------
+// GET /auth/reset/:token  show reset page
+// ---------------------------
 router.get("/reset/:token", async (req, res) => {
   try {
     const { token } = req.params;
     const tokensCol = await passwordResetTokens();
     const record = await tokensCol.findOne({ token });
 
-    if (!record || record.used) {
-      return res.status(400).json({ error: "Invalid or used token" });
-    }
-    if (record.expiresAt < new Date()) {
-      return res.status(400).json({ error: "Token expired" });
+    if (!record || record.used || record.expiresAt < new Date()) {
+      return res.render("reset", {
+        title: "Reset Password",
+        cssFile: "reset.css",
+        jsFile: "reset.js",
+        error: "This reset link is invalid or has expired.",
+      });
     }
 
-    res.json({ message: "Token valid" });
+    return res.render("reset", {
+      title: "Reset Password",
+      cssFile: "reset.css",
+      jsFile: "reset.js",
+      token,
+      error: req.query.error,
+      msg: req.query.msg,
+    });
   } catch (e) {
-    res.status(400).json({ error: e.toString() });
+    return res.render("reset", {
+      title: "Reset Password",
+      cssFile: "reset.css",
+      jsFile: "reset.js",
+      error: e.toString(),
+    });
   }
 });
 
-// Actually reset password
-// POST /auth/reset/:token  body: { password }
+// ---------------------------
+// POST /auth/reset/:token
+// ---------------------------
 router.post("/reset/:token", async (req, res) => {
   try {
     const { token } = req.params;
@@ -188,17 +239,26 @@ router.post("/reset/:token", async (req, res) => {
     const tokensCol = await passwordResetTokens();
     const record = await tokensCol.findOne({ token });
 
-    if (!record || record.used) {
-      return res.status(400).json({ error: "Invalid or used token" });
-    }
-    if (record.expiresAt < new Date()) {
-      return res.status(400).json({ error: "Token expired" });
+    if (!record || record.used || record.expiresAt < new Date()) {
+      return res.redirect(
+        "/auth/reset/" +
+          token +
+          "?error=" +
+          encodeURIComponent("This reset link is invalid or has expired.")
+      );
     }
 
     const usersCol = await users();
-    const user = await usersCol.findOne({ _id: new ObjectId(record.userId) });
+    const user = await usersCol.findOne({
+      _id: new ObjectId(record.userId),
+    });
     if (!user) {
-      return res.status(400).json({ error: "User not found" });
+      return res.redirect(
+        "/auth/reset/" +
+          token +
+          "?error=" +
+          encodeURIComponent("User not found.")
+      );
     }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
@@ -207,58 +267,57 @@ router.post("/reset/:token", async (req, res) => {
       { $set: { hashedPassword } }
     );
 
-    // Mark token as used
-    await tokensCol.updateOne({ _id: record._id }, { $set: { used: true } });
+    await tokensCol.updateOne(
+      { _id: record._id },
+      { $set: { used: true } }
+    );
 
-    res.json({ message: "Password reset successful. You can now log in." });
+    return res.redirect(
+      "/auth/login?msg=" +
+        encodeURIComponent("Password reset successful. Please log in.")
+    );
   } catch (e) {
-    res.status(400).json({ error: e.toString() });
+    return res.redirect(
+      `/auth/reset/${req.params.token}?error=` +
+        encodeURIComponent(e.toString())
+    );
   }
 });
 
-// GET /login
-router.get("/login", (req, res) => {
+// ---------------------------
+// GET Pages (Handlebars)
+// ---------------------------
+
+// GET /auth/login
+router.get("/login", redirectIfLoggedIn, (req, res) => {
   res.render("login", {
     title: "Login",
     cssFile: "login.css",
     jsFile: "login.js",
     error: req.query.error,
-    msg: req.query.msg
+    msg: req.query.msg,
   });
 });
 
-
-// GET /register
-router.get("/register", (req, res) => {
+// GET /auth/register
+router.get("/register", redirectIfLoggedIn, (req, res) => {
   res.render("register", {
     title: "Register",
     cssFile: "register.css",
     jsFile: "register.js",
     error: req.query.error,
-    msg: req.query.msg
+    msg: req.query.msg,
   });
 });
 
-// GET /forgot
+// GET /auth/forgot
 router.get("/forgot", (req, res) => {
   res.render("forgot", {
     title: "Forgot Password",
     cssFile: "forgot.css",
     jsFile: "forgot.js",
     error: req.query.error,
-    msg: req.query.msg
-  });
-});
-
-// GET /reset/:token
-router.get("/reset/:token", (req, res) => {
-  res.render("reset", {
-    title: "Reset Password",
-    cssFile: "reset.css",
-    jsFile: "reset.js",
-    token: req.params.token,
-    error: req.query.error,
-    msg: req.query.msg
+    msg: req.query.msg,
   });
 });
 
