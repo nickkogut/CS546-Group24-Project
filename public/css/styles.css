@@ -84,3 +84,8 @@ main {
   border-style: solid;
   padding: 10px;
 }
+
+#homepageDesc {
+  line-height: 1.5rem;
+  ;
+}
