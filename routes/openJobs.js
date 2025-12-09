@@ -43,7 +43,7 @@ router.post("/search", async (req, res) => {
     if (Boolean(searchFields.useResume)) {
         if (!isAuthenticated) {
             // If an unauthenticated user clicks "search with my resume" redirect them to the login page
-            return res.rerdirect('login'); // TODO: check if other parameters must be passed to the login page
+            return res.json({ redirect: '/auth/login' }).status(401);
         } else {
             // Find the user's resume
             if (!user.resume) throw "Error: you have not supplied a resume. Please enter one on your profile or click 'Search' to search without it" // should this just redirect to the account page?

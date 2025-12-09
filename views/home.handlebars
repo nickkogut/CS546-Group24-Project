@@ -3,4 +3,20 @@
   <p>
     Welcome to our website! You can navigate using the header bar up top.
   </p>
+
+  <div id="publicProfiles">
+    <h2>Public Profiles</h2>
+    <p>Check out the job experience of some of our users!</p>
+    <ul id="publicProfileList">
+      {{#each publicUsers}}
+      <li>
+        <a href="/user/{{_id}}">{{firstName}} {{lastName}}</a>
+      </li>
+      {{/each}}
+
+    </ul>
+
+
+
+  </div>
 </main>
