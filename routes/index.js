@@ -7,6 +7,7 @@ import openJobsRoutes from "./openJobs.js";
 import authRoutes from "./auth.js";
 import { requireAuth } from "../middleware/auth.js";
 import jobCompareRoutes from './jobCompare.js';
+import { getPublicUsers } from "../data/user.js";
 
 
 const constructorMethod = (app) => {
@@ -20,8 +21,9 @@ const constructorMethod = (app) => {
   // app.use("/payroll", requireAuth, payrollRoutes);
   // app.use("/analysis", requireAuth, analysisRoutes);
 
-  app.get('/', (req, res) => {
-    res.render('home', { title: 'Home | CareerScope NYC' });
+  app.get('/', async (req, res) => {
+    const publicUsers = await getPublicUsers(8);
+    res.render('home', { title: 'Home | CareerScope NYC', publicUsers });
   });
 
   app.use('/jobs', openJobsRoutes);

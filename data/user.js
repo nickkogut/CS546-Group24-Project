@@ -15,7 +15,7 @@ export const createUser = async ({
   borough,
   age,
   resume = "",
-  publicProfile = true,
+  publicProfile = false, // opt in
   hashedPassword
 }) => {
   firstName = checkString(firstName);
@@ -150,4 +150,18 @@ export const removeTaggedJob = async (userId, jobId) => {
   if (!removalInfo) throw "Error: failed to remove job status";
   return removalInfo;
 
+}
+
+export const getPublicUsers = async (numResults) => {
+  // Returns up to numResults users with public profiles
+  const usersCol = await usersCollection();
+  const users = await usersCol.find({
+    public: true
+  }).limit(numResults).toArray();
+
+  if (users) {
+    return users;
+  } else {
+    return [];
+  }
 }
