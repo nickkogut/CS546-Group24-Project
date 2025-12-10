@@ -33,10 +33,19 @@
 
     <div style="margin-bottom:8px;">
       <label for="filterAgency">Agency (optional):</label>
-      <input id="filterAgency" type="text">
-
+      <select id="filterAgency">
+        <option value="">Any</option>
+        {{#each agencies}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
       <label for="filterBorough">Borough (optional):</label>
-      <input id="filterBorough" type="text">
+      <select id="filterBorough">
+        <option value="">Any</option>
+        {{#each boroughs}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
     </div>
 
     <div style="margin-bottom:8px;">
@@ -75,38 +84,59 @@
 
     <hr>
 
-    <h3>Advanced job list</h3>
+<h3>Advanced job list</h3>
 
-    <div>
-      <label>Agency:</label>
-      <input id="advAgency" type="text">
+<div style="margin-bottom:8px;">
+  <label for="advAgency">Agency:</label>
+  <select id="advAgency">
+    <option value="">Any</option>
+    {{#each agencies}}
+      <option value="{{this}}">{{this}}</option>
+    {{/each}}
+  </select>
 
-      <label>Borough:</label>
-      <input id="advBorough" type="text">
-    </div>
+  <label for="advBorough">Borough:</label>
+  <select id="advBorough">
+    <option value="">Any</option>
+    {{#each boroughs}}
+      <option value="{{this}}">{{this}}</option>
+    {{/each}}
+  </select>
+</div>
 
-    <div>
-      <label>Year from:</label>
-      <input id="advYearFrom" type="number">
+<div style="margin-bottom:8px;">
+  <label for="advYearFrom">Year from:</label>
+  <select id="advYearFrom">
+    <option value="">Any</option>
+    {{#each years}}
+      <option value="{{this}}">{{this}}</option>
+    {{/each}}
+  </select>
 
-      <label>Year to:</label>
-      <input id="advYearTo" type="number">
-    </div>
+  <label for="advYearTo">Year to:</label>
+  <select id="advYearTo">
+    <option value="">Any</option>
+    {{#each years}}
+      <option value="{{this}}">{{this}}</option>
+    {{/each}}
+  </select>
+</div>
 
-    <div>
-      <label>Min avg salary:</label>
-      <input id="advMinAvg" type="number">
+<div style="margin-bottom:8px;">
+  <label for="advMinAvg">Min avg salary:</label>
+  <input id="advMinAvg" type="number" placeholder="e.g. 50000">
 
-      <label>Min job entries:</label>
-      <input id="advMinCount" type="number">
-    </div>
+  <label for="advMinCount">Min job entries:</label>
+  <input id="advMinCount" type="number" placeholder="e.g. 5">
+</div>
 
-    <button id="advancedJobsBtn">Show jobs</button>
+<button id="advancedJobsBtn">Show jobs</button>
 
-    <p id="advancedJobsStatus"></p>
-    <div id="advancedJobsResults"></div>
+<p id="advancedJobsStatus" style="color:red;"></p>
+<div id="advancedJobsResults"></div>
 
-    <hr>
+<div id="advPagination" style="margin-top:10px;"></div>
+
 
     <h3>Experience-based salary stats</h3>
 

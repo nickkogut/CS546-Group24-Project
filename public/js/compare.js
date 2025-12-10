@@ -717,6 +717,65 @@
             "Error loading experience stats. Check console.";
           console.error(e);
         }
+        /* ========================================
+          ADVANCED JOB LIST — Pagination + Fetch
+          ======================================== */
+          async function loadAdvancedJobs(page = 1) {
+          const agency = document.getElementById("advAgency").value;
+          const borough = document.getElementById("advBorough").value;
+          const yearFrom = document.getElementById("advYearFrom").value;
+          const yearTo = document.getElementById("advYearTo").value;
+          const minAvgSalary = document.getElementById("advMinAvg").value;
+          const minCount = document.getElementById("advMinCount").value;
+
+          const res = await fetch("/compare/advancedJobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              agency,
+              borough,
+              yearFrom,
+              yearTo,
+              minAvgSalary,
+              minCount,
+              page
+            })
+          });
+
+          const data = await res.json();
+          if (data.error) {
+            document.getElementById("advancedJobsStatus").innerText = data.error;
+            return;
+          }
+
+          const list = data.jobs
+            .map(
+              j => `
+              <div>
+                <b>${j.title}</b> — Avg: $${Math.round(j.avgSalary)}  
+                (${j.count} entries)  
+                <br><i>${j.minYear} - ${j.maxYear}</i>
+              </div><br>
+            `
+            )
+            .join("");
+
+          document.getElementById("advancedJobsResults").innerHTML = list;
+
+          // Pagination
+          let p = "";
+          if (data.currentPage > 1) {
+            p += `<button onclick="loadAdvancedJobs(${data.currentPage - 1})">Prev</button>`;
+          }
+          if (data.currentPage < data.totalPages) {
+            p += `<button onclick="loadAdvancedJobs(${data.currentPage + 1})">Next</button>`;
+          }
+          document.getElementById("advPagination").innerHTML = p;
+        }
+
+        document.getElementById("advancedJobsBtn").onclick = () =>
+          loadAdvancedJobs(1);
+
       });
     }
   });

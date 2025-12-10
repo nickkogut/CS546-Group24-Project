@@ -248,7 +248,6 @@ export async function getAdvancedJobList(filters = {}) {
   return arr;
 }
 
-// FIXED experience-based stats
 export async function getExperienceStats(title, minYears, maxYears, filters = {}) {
   if (!title) throw "Missing title";
 

@@ -141,18 +141,48 @@ router.post("/graphData", async (req, res) => {
 });
 
 /* ===============================
-   ADVANCED JOB LIST
+   ADVANCED JOB LIST — 25 per page
    =============================== */
 router.post("/advancedJobs", async (req, res) => {
   try {
-    const { filters } = req.body;
-    const jobs = await getAdvancedJobList(filters || {});
-    res.json({ jobs });
+    let { agency, borough, yearFrom, yearTo, minAvgSalary, minCount, page } =
+      req.body;
 
+    agency = agency || "";
+    borough = borough || "";
+    yearFrom = yearFrom ? Number(yearFrom) : null;
+    yearTo = yearTo ? Number(yearTo) : null;
+    minAvgSalary = minAvgSalary ? Number(minAvgSalary) : null;
+    minCount = minCount ? Number(minCount) : null;
+    page = page ? Number(page) : 1;
+
+    const filters = {
+      agency,
+      borough,
+      yearFrom,
+      yearTo,
+      minAvgSalary,
+      minCount
+    };
+
+    const allJobs = await getAdvancedJobList(filters);
+
+    // Pagination (25 per page)
+    const perPage = 25;
+    const start = (page - 1) * perPage;
+    const paginated = allJobs.slice(start, start + perPage);
+
+    res.json({
+      jobs: paginated,
+      currentPage: page,
+      totalPages: Math.ceil(allJobs.length / perPage),
+      totalResults: allJobs.length
+    });
   } catch (e) {
     res.status(500).json({ error: e.toString() });
   }
 });
+
 
 /* ===============================
    EXPERIENCE-BASED SALARY STATS
