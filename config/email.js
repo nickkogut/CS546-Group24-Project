@@ -1,20 +1,33 @@
-// config/email.js
 import nodemailer from "nodemailer";
-
-export const mailer = nodemailer.createTransport({
-  service: "Gmail",
+import dotenv from "dotenv";
+dotenv.config();
+if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+  console.error("❌ Missing SMTP_USER or SMTP_PASS in .env");
+}
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: false, // 587 = false, 465 = true
   auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
 });
 
-export const sendResetEmail = async (toEmail, resetLink) => {
+// Function to send password reset email
+export async function sendResetEmail(toEmail, resetLink) {
   const mailOptions = {
-    from: process.env.EMAIL_USER,
+    from: process.env.FROM_EMAIL,
     to: toEmail,
-    subject: "NYC Job Analyzer - Password Reset Link",
-    text: `Please click the following link within 15 minutes to reset your password:\n\n${resetLink}\n\nIf you did not request a password reset, please ignore this email.`
+    subject: "Reset Your Password - CareerScope NYC",
+    html: `
+      <p>You requested a password reset.</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetLink}" target="_blank">Reset Password</a>
+      <p>This link expires in <strong>15 minutes</strong>.</p>
+      <p>If you did not request this, please ignore this email.</p>
+    `,
   };
-  await mailer.sendMail(mailOptions);
-};
+
+  return transporter.sendMail(mailOptions);
+}
