@@ -165,7 +165,12 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
             $.ajax(requestConfig).then(function (responseMessage) {
                 const jobDiv = $("#jobListings");
                 let pageInfo;
-                console.log(responseMessage);
+                // console.log(responseMessage);
+
+                if (responseMessage.redirect) {
+                    window.location.replace(responseMessage.redirect);
+                    return;
+                }
 
                 if (responseMessage.error) {
                     $("#error").show();

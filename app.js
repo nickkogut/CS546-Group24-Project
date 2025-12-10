@@ -6,7 +6,8 @@ import { mongoConfig } from "./config/settings.js";
 import configRoutes from './routes/index.js';
 import session from 'express-session';
 import MongoStore from "connect-mongo";
-
+import dotenv from "dotenv";
+dotenv.config();
 const app = express();
 
 app.use(

@@ -36,9 +36,34 @@
         <input type="password" name="password" />
       </div>
 
+      {{!-- Borough 加回來 --}}
+      <div class="field">
+        <label>Borough</label>
+        <select name="borough">
+          <option value="">Select a borough (optional)</option>
+          <option value="Manhattan">Manhattan</option>
+          <option value="Brooklyn">Brooklyn</option>
+          <option value="Queens">Queens</option>
+          <option value="Bronx">Bronx</option>
+          <option value="Staten Island">Staten Island</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+
       <div class="field">
         <label>Age</label>
         <input type="number" name="age" min="1" />
+      </div>
+
+      {{!--open profile --}}
+      <div class="field checkbox-field">
+        <label>
+          <input type="checkbox" name="publicProfile" checked />
+          Make my profile public
+        </label>
+        <p class="field-hint">
+          If public, other users can see your basic job history and tagged jobs.
+        </p>
       </div>
 
       <button type="submit" class="btn-primary">Create account</button>
@@ -50,3 +75,5 @@
 
   </div>
 </div>
+
+<script src="/js/register.js"></script>

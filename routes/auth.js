@@ -24,12 +24,27 @@ const redirectIfLoggedIn = (req, res, next) => {
 // ---------------------------
 router.post("/register", async (req, res) => {
   try {
-    let { firstName, lastName, email, password, age } = req.body;
+    let {
+      firstName,
+      lastName,
+      email,
+      password,
+      age,
+      borough,
+      publicProfile
+    } = req.body;
 
     firstName = checkString(firstName);
     lastName = checkString(lastName);
     email = checkString(email).toLowerCase();
     password = checkString(password);
+
+    // borough optional
+    if (borough && borough.trim() !== "") {
+      borough = checkString(borough);
+    } else {
+      borough = "Unknown";
+    }
 
     let ageNum = null;
     if (age && age.trim() !== "") {
@@ -54,13 +69,16 @@ router.post("/register", async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
+    // Determine if public profile is checked
+    const isPublic = publicProfile === "on";
+
     const newUser = {
       firstName,
       lastName,
       email,
       age: ageNum,
       hashedPassword,
-      public: true,
+      public: isPublic,
       resume: "",
       heldJobs: [],
       taggedJobs: [],
