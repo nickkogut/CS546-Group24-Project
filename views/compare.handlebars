@@ -5,32 +5,93 @@
     <p style="color:red">{{error}}</p>
   {{/if}}
 
-  <div>
-    <label>Select Job Title:</label>
-    <select id="jobSelect">
-      {{#each jobs}}
-        <option value="{{this}}">{{this}}</option>
-      {{/each}}
-    </select>
-  </div>
+  {{!-- UNIFIED GRAPH SECTION --}}
+  <section id="graph-section" style="margin-bottom:30px;">
+    <h2>Graph salaries for a job</h2>
 
-  <br>
+    <div style="margin-bottom:8px;">
+      <label for="jobSelect">Job title:</label>
+      <select id="jobSelect">
+        {{#each jobs}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
+    </div>
 
-  <div>
-    <label>Your Salary:</label>
-    <input id="userSalary" type="number" placeholder="Enter your salary" />
-  </div>
+    <div style="margin-bottom:8px;">
+      <label for="salaryInput">Your salary (optional):</label>
+      <input id="salaryInput" type="number" placeholder="e.g. 60000" />
+    </div>
 
-  <br>
+    <div style="margin-bottom:8px;">
+      <label for="chartType">Graph type:</label>
+      <select id="chartType">
+        <option value="histogram">Histogram</option>
+        <option value="boxplot">Box &amp; Whisker</option>
+        <option value="dotplot">Dot Plot</option>
+      </select>
+    </div>
 
-  <button id="compareBtn">Compare</button>
+    <div style="margin-bottom:8px;">
+      <label for="filterAgency">Agency (optional):</label>
+      <input id="filterAgency" type="text" placeholder="e.g. Admin For Children's Svcs" />
 
-  <p id="status" style="color:red;"></p>
+      <label for="filterBorough">Borough (optional):</label>
+      <input id="filterBorough" type="text" placeholder="e.g. Queens" />
+    </div>
 
-  <canvas id="histChart" width="800" height="400"></canvas>
+    <div style="margin-bottom:8px;">
+      <label for="filterMinSalary">Min salary (optional):</label>
+      <input id="filterMinSalary" type="number" placeholder="e.g. 30000" />
+    </div>
+
+    <div style="margin-bottom:8px;">
+      <button id="compareBtn">Generate Graph</button>
+    </div>
+
+    <p id="status" style="color:red;"></p>
+
+    <canvas
+      id="histChart"
+      width="800"
+      height="400"
+      style="background:#f6fbff;"
+    ></canvas>
+
+    <div id="listingLink" style="margin-top:8px;"></div>
+  </section>
+
+  <hr>
+
+  {{!-- JOB STATS + NEXT JOBS SECTION --}}
+  <section id="job-stats" style="margin-bottom:30px;">
+    <h2>Job Stats – where do people in your role move on to?</h2>
+
+    <div>
+      <label for="fromJobInput">Your current job:</label>
+      <input
+        id="fromJobInput"
+        type="text"
+        placeholder="e.g. Child Protective Specialist"
+      />
+      <button id="findTransitionsBtn">Find transitions</button>
+    </div>
+
+    <p id="transitionsStatus" style="color:darkred;"></p>
+
+    <div id="transitionsList" style="margin-top:10px;">
+      {{!-- filled by JS --}}
+    </div>
+
+    <div style="margin-top:10px;">
+      <button id="compareSelectedBtn">Compare Selected Jobs</button>
+    </div>
+
+    <div id="compareResults" style="margin-top:10px;">
+      {{!-- side-by-side compare table goes here --}}
+    </div>
+  </section>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="/js/compare.js"></script>
-  <h1>Compare</h1>
-  <p>tyler will work on this page</p>
 </main>

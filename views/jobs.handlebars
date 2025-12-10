@@ -1,6 +1,12 @@
 <main>
-  <h1>Jobs</h1>
-  <p>Nick is doing this one.</p>
+  <h1>Open Jobs</h1>
+  <div id="pageDesc">
+    <p>Browse the open job postings that best meet your criteria! <a href="/auth/login">Login</a> to upload a resume for
+      more
+      personalized resume-based suggestions, or to save jobs for later</p>
+  </div>
+  <br>
+
 
   <form id="openJobSearch" name="openJobSearch" method="post" action="/jobs">
 
@@ -18,9 +24,15 @@
     </datalist>
 
     {{!-- Fields --}}
+    <label for="agency">Agency</label>
+
     <input id="agency" name="agency" type="text" autoComplete="on" list="agencyList" placeholder="Select an Agency" />
+    <label for="title">Job Title</label>
     <input id="title" name="title" type="text" autoComplete="on" list="titleList" placeholder="Select a Job Title" />
+
+    <label for="keywords">Keywords</label>
     <input id="keywords" name="keywords" type="text" placeholder="Enter Job Keywords" />
+    <label for="borough">Borough</label>
     <select id="borough" name="borough">
       <option selected value="">Any Borough</option>
       <option value="Manhattan">Manhattan</option>
@@ -30,8 +42,10 @@
       <option value="Brooklyn">Brooklyn</option>
     </select>
 
+    <label for="minDate">Posted Since</label>
     <input id="minDate" name="minDate" type="date" />
 
+    <label for="salaryRangeValue">Salary Range</label>
     <div id="salaryRangeContainer">
       <input type="text" id="salaryRangeValue" readonly>
       <div id="salarySlider"></div>
@@ -43,8 +57,12 @@
 
     <input id="page" name="page" type="number" value="{{pageInfo.page}}" min="1" max="{{pageInfo.maxPage}}" hidden
       readonly>
+    <label for="nonResidency">Open to Non-Residents</label>
     <input id="nonResidency" name="nonResidency" type="checkbox" checked />
+
+    <label for="fullTime">Full Time Only</label>
     <input id="fullTime" name="fullTime" type="checkbox" />
+    <label for="numPerPage"> Results Per Page</label>
     <select id="numPerPage" name="numPerPage">
       <option value="10" selected>10</option>
       <option value="20">20</option>
@@ -52,9 +70,9 @@
       <option value="100">100</option>
     </select>
 
-    {{#if isAutheticated}}
+    {{#if isAuthenticated}}
     <select id="jobTag" name="jobTag">
-      <option value="" selected>Job Tag</option>
+      <option value="" selected>Any Job Tag</option>
       <option value="Applied">Applied</option>
       <option value="Rejected">Rejected</option>
       <option value="Interview Scheduled">Interview Scheduled</option>
@@ -66,17 +84,7 @@
     <button id="submitSearchWithResume" name="submitSearchWithResume">Search with My Resume</button>
     <button id="resetSearch" name="resetSearch">Reset</button>
 
-    {{!-- Labels --}}
-    <label for="agency">Agency</label>
-    <label for="title">Job Title</label>
-    <label for="borough">Borough</label>
-    <label for="salaryRangeValue">Salary Range</label>
-    <label for="keywords">Keywords</label>
-    <label for="nonResidency">Open to Non-Residents</label>
-    <label for="fullTime">Full Time Only</label>
-    <label for="minDate">Posted Since</label>
-    <label for="numPerPage"> Results Per Page</label>
-    {{#if isAutheticated}}
+    {{#if isAuthenticated}}
     <label for="jobTag">Job Tag</label>
     {{/if}}
 
@@ -92,11 +100,7 @@
   </div>
 
   <div id="jobListings">
-    {{#each jobs}}
-    <div class="listing">
-      <p>{{title}}</p>
-    </div>
-    {{/each}}
+    {{!-- Filled after an AJAX request --}}
   </div>
 
   <div id="pageControls">

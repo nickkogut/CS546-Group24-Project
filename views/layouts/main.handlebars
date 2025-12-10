@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <title>{{title}}</title>
     <link rel="stylesheet" href="/public/css/styles.css">
+    {{#if cssFile}}
+      <link rel="stylesheet" href="/css/{{cssFile}}" />
+    {{/if}}
   </head>
   <body>
     <header class="site-header">
@@ -28,7 +31,7 @@
     {{#if isAuthenticated}}
     "/account"
     {{else}}
-    "/auth/register"
+    "/auth/login"
     {{/if}}>
       <img
         src="/public/img/accountIcon.png"

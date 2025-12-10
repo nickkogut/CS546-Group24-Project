@@ -1,42 +1,114 @@
-<main>
+<main class="my-info-main">
   <h1>My Info</h1>
 
-  {{#if error}}
-    <p class="error" id="resumeError">{{error}}</p>
+  {{#if resumeError}}
+    <p class="error" id="resumeError">{{resumeError}}</p>
   {{else}}
     <p class="error" id="resumeError"></p>
   {{/if}}
 
-  {{#if showAuthPrompt}}
-    <p>You need an account to view and save your information.</p>
-    <div class="account-actions">
-      <a href="/auth/login" class="btn">Login</a>
-      <a href="/auth/register" class="btn secondary">Register</a>
-    </div>
+  {{#if jobError}}
+    <p class="error" id="jobError">{{jobError}}</p>
   {{else}}
-    <p>
-      Welcome,
-      {{#if currentUser}}
-        {{currentUser.firstName}} {{currentUser.lastName}}
-      {{else}}
-        user
-      {{/if}}!
-    </p>
-
-    <section id="resume-section">
-      <h3>Paste your resume</h3>
-      <form id="resume-form" method="post" action="/account/resume">
-        <textarea
-          id="resumeText"
-          name="resumeText"
-          rows="10"
-          style="width:100%"
-        >{{resumeText}}</textarea>
-
-        <button type="submit" class="btn">Save resume</button>
-      </form>
-    </section>
-
-    <script src="/public/js/account.js"></script>
+    <p class="error" id="jobError"></p>
   {{/if}}
+
+  <p>
+    Welcome,
+    {{#if currentUser}}
+      {{currentUser.firstName}} {{currentUser.lastName}}
+    {{else}}
+      user
+    {{/if}}!
+  </p>
+
+  {{!-- Resume section --}}
+  <section id="resume-section">
+    <h3 id>
+      {{#if hasResume}}
+        Your resume
+        {{else}}
+        Paste your resume
+        {{/if}}
+        </h3>
+    <form id="resume-form" method="post" action="/account/resume">
+      <textarea
+        id="resumeText"
+        name="resumeText"
+        rows="10"
+      >{{resumeText}}</textarea>
+
+      <div class="resume-actions">
+        <button type="submit" id="saveResumeBtn" class="btn">Save resume</button>
+        <button type="button" id="editResumeBtn" class="btn secondary">Edit</button>
+        <button type="button" id="clearResumeBtn" class="btn secondary">Clear</button>
+      </div>
+    </form>
+  </section>
+
+  {{!-- Current job section --}}
+  <section id="current-job-section">
+    <h3>Current job</h3>
+    <form id="current-job-form" method="post" action="/account/current-job">
+      <div class="field">
+        <label for="currentJobTitle">Job title</label>
+        <input
+          list="jobTitleList"
+          id="currentJobTitle"
+          name="jobTitle"
+          type="text"
+          value="{{currentJobTitle}}"
+        >
+        <datalist id="jobTitleList">
+          {{#if jobTitles}}
+            {{#each jobTitles}}
+              <option value="{{this}}"></option>
+            {{/each}}
+          {{/if}}
+        </datalist>
+      </div>
+
+      <div class="field">
+        <label for="currentJobSalary">Current salary (annual, $)</label>
+        <input
+          id="currentJobSalary"
+          name="salary"
+          type="number"
+          min="0"
+          step="1000"
+          value="{{currentJobSalary}}"
+        >
+      </div>
+
+      <div class="field">
+        <label for="currentJobStartDate">Start date</label>
+        <input
+          id="currentJobStartDate"
+          name="startDate"
+          type="date"
+          value="{{currentJobStartDate}}"
+        >
+      </div>
+
+      <div class="field">
+        <label for="currentJobBorough">Work borough (optional)</label>
+        <select id="currentJobBorough" name="borough">
+          <option value="">Select borough</option>
+          <option value="Manhattan" {{#if boroughIsManhattan}}selected{{/if}}>Manhattan</option>
+          <option value="Brooklyn" {{#if boroughIsBrooklyn}}selected{{/if}}>Brooklyn</option>
+          <option value="Queens" {{#if boroughIsQueens}}selected{{/if}}>Queens</option>
+          <option value="Bronx" {{#if boroughIsBronx}}selected{{/if}}>Bronx</option>
+          <option value="Staten Island" {{#if boroughIsStatenIsland}}selected{{/if}}>Staten Island</option>
+        </select>
+      </div>
+
+      <div class="job-actions">
+        <button type="submit" id="saveJobBtn" class="btn">Save job</button>
+        <button type="button" id="editJobBtn" class="btn secondary">Edit</button>
+        <button type="button" id="clearJobBtn" class="btn secondary">Clear</button>
+      </div>
+    </form>
+  </section>
+
+  <script src="/public/js/account.js"></script>
 </main>

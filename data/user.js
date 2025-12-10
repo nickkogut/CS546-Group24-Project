@@ -105,27 +105,52 @@ export const addHeldJob = async (userId, jobData) => {
 
 export const addTaggedJob = async (userId, taggedJobData) => {
   const _id = _idToObjectId(userId);
-  const users = await usersCollection();
+  const jobId = _idToObjectId(taggedJobData.jobId); 
 
   const taggedJob = {
     jobId: checkString(taggedJobData.jobId),
     applicationStatus: checkString(taggedJobData.applicationStatus),
     notes: taggedJobData.notes || "",
-    confidence:
-      typeof taggedJobData.confidence === "number"
-        ? taggedJobData.confidence
-        : 0
+    confidence: typeof taggedJobData.confidence === "number" ? taggedJobData.confidence : 5
   };
 
-  const updateInfo = await users.findOneAndUpdate(
-    { _id },
-    { $push: { taggedJobs: taggedJob } },
-    { returnDocument: "after" }
+  if (taggedJob.notes.length > 500) throw "Error: notes must be <= 500 chars";
+
+  const users = await usersCollection();
+
+  let updateInfo = await users.updateOne(
+    { _id: new ObjectId(userId), "taggedJobs.jobId": taggedJob.jobId },
+    { $set: { "taggedJobs.$": taggedJob } }
   );
 
-  if (!updateInfo.value) throw "Error: could not add tagged job";
-  return updateInfo.value;
+  if (updateInfo.matchedCount === 0) {
+    updateInfo = await users.updateOne(
+      { _id: new ObjectId(userId) },
+      { $push: { taggedJobs: taggedJob } }
+    );
+  }
+
+  if (!updateInfo) throw "Error: could not add tagged job";
+  return updateInfo;
 };
+
+export const removeTaggedJob = async (userId, jobId) => {
+  const _id = _idToObjectId(checkString(userId));
+  jobId = checkString(jobId);
+  if (!ObjectId.isValid(jobId)) throw "Error: invalid ObjectId";
+
+  const users = await usersCollection();
+
+  const removalInfo = await users.updateOne(
+    { _id: _id },
+    { $pull: { taggedJobs: { jobId: jobId } } },
+
+  );
+
+  if (!removalInfo) throw "Error: failed to remove job status";
+  return removalInfo;
+
+}
 
 export const updateUserResume = async (id, resumeText) => {
   const _id = _idToObjectId(id);
@@ -136,13 +161,39 @@ export const updateUserResume = async (id, resumeText) => {
   const users = await usersCollection();
 
   const updateInfo = await users.findOneAndUpdate(
-    {_id},
-    {$set: { resume: resumeText }},
-    {returnDocument: "after"}
+    { _id },
+    { $set: { resume: resumeText } },
+    { returnDocument: "after" }
   );
 
-  if (!updateInfo.value){
+  if (!updateInfo) {
     throw "Error: could not update resume";
   }
-  return updateInfo.value;
+  return updateInfo;
 };
+
+export const updateCurrentJob = async (userId, jobData) => {
+  const _id = _idToObjectId(userId);
+  const users = await usersCollection();
+
+  const title = checkString(jobData.title, "job title");
+
+  const currentJob = {
+    title,
+    salary: typeof jobData.salary === "number" ? jobData.salary : null,
+    borough: jobData.borough ? checkString(jobData.borough, "borough") : null,
+    startDate: jobData.startDate || null
+  };
+
+  const updateInfo = await users.updateOne(
+    { _id },
+    { $set: { currentJob } }
+  );
+
+  if (!updateInfo || updateInfo.modifiedCount === 0) {
+    throw "Error: could not update current job";
+  }
+
+  return updateInfo;
+};
+

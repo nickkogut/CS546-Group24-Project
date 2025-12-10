@@ -1,3 +1,37 @@
+const jobTagForm = `
+<form class="selectJobForm">
+<label>
+    Select a Job Tag
+    <select class="tag" name="tag">
+    <option value="">Tag this job</option>
+    <option value="Applied">Applied</option>
+    <option value="Rejected">Rejected</option>
+    <option value="Interview Scheduled">Interview Scheduled</option>
+    <option value="Offer Received">Offer Received</option>
+    <option value="Remove Tag">Remove Tag</option>
+    </select>
+</label>
+
+<div class="subForm" hidden>
+    <label>
+    Notes
+    <textarea class="notes" name="notes" placeholder="Notes"></textarea>
+    </label>
+    <label>
+    Confidence (1-10)
+    <input class="confidence" type="number" min="1" max="10" value="5">
+    </label>
+    <button class="submitTag" name="submitTag">Submit</button>
+    <button class="removeTag" name="removeTag">Remove Tag</button>
+</div>
+</form>
+<div class="tagError" hidden>
+<ul class="tagErrorList">
+
+</ul>
+</div>`; // Inserted into each job listing when viewed by an authenticated user
+
+
 const updateSliderDisplay = (min, max) => {
     let shownMin = 500 * Math.round(min / 500);
     let shownMax = 500 * Math.round(max / 500);
@@ -65,6 +99,8 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
         let page = $("#page").val();
         let jobTag = $("#jobTag").val();
 
+        let isAuthenticated = ($("#jobTag").length > 0);
+
         if (page < 1) {
             // the most recent search returned no results
             page = 1;
@@ -76,12 +112,12 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
 
         // Make sure the agency and title will have matches in the database
         const matchingAgencies = $('#agencyList option').filter(function () {
-            var re = new RegExp(agency, 'i')
+            var re = new RegExp(agency, 'i');
             return this.value.match(re);
         });
 
         const matchingTitles = $('#titleList option').filter(function () {
-            var re = new RegExp(title, 'i')
+            var re = new RegExp(title, 'i');
             return this.value.match(re);
         });
 
@@ -141,12 +177,23 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
                         numResults: 0
                     }
                 } else {
+
+
                     responseMessage.jobs.map((jobListing) => {
-                        let element = $(
-                            `<div class="listing">
+
+                        let element;
+                        if (isAuthenticated) {
+                            element = $(
+                                `<div class="listing" id=${jobListing._id}>
+                            <p>${jobListing.title}</p> ${jobTagForm}
+                            </div>`);
+
+                        } else {
+                            element = $(
+                                `<div class="listing">
                             <p>${jobListing.title}</p>
-                            </div>`
-                        );
+                            </div>`);
+                        }
 
                         // TODO: add rest of info for job in each listing. It should match handlebars
                         jobDiv.append(element);
@@ -215,5 +262,78 @@ $("#submitSearch").click((event) => {
     $("#openJobSearch").submit();
 });
 
+$(document).on('change', '.tag', function () {
+    $(this).closest(".listing").find(".subForm").hide();
+    const selected = $(this).val();
+    if (selected === "Remove Tag") {
+        $(this).closest('.selectJobForm').find('.removeTag').trigger('click');
+        $(this).val("");
+    } else if (selected !== "") {
+        $(this).closest(".listing").find(".subForm").show();
+    }
+});
 
+$(document).on('click', '.removeTag', function (event) {
+    event.preventDefault();
+    $(this).closest('.selectJobForm').find('.tag').val("").trigger('change');
+    $(this).closest('.selectJobForm').submit();
+});
 
+$(document).on("submit", ".selectJobForm", function (event) {
+    event.preventDefault();
+    const errDiv = $(this).siblings(".tagError");
+    const errList = errDiv.find(".tagErrorList");
+    const subForm = $(this).find(".subForm");
+    errList.empty();
+    errDiv.hide();
+
+    const errors = [];
+
+    const jobId = $(this).closest('.listing').attr('id');
+    const tag = $(this).find(".tag").val();
+    const notes = $(this).find(".notes").val();
+    const confidence = $(this).find('.confidence').val();
+
+    const validTags = ["applied", "rejected", "interview scheduled", "offer received", ""];
+    if (!validTags.includes(tag.toLowerCase())) errors.push(`<li class="tagError">Invalid tag</li>`);
+    if (confidence < 1 || confidence > 10) errors.push(`<li class="tagError">Confidence must be 1-10</li>`);
+    if (notes.length > 500) errors.push(`<li class="tagError">Notes must be <= 500 characters</li>`);
+
+    if (errors.length > 0) {
+        $(this).trigger('reset');
+        errDiv.show();
+        errors.forEach((e) => {
+            errList.append(e);
+        });
+        return false;
+    }
+
+    else {
+        let requestConfig = {
+            method: 'POST',
+            url: '/user/updateTag',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                jobId,
+                applicationStatus: tag,
+                notes,
+                confidence
+            })
+        };
+
+        $.ajax(requestConfig).then(function (responseMessage) {
+            if (responseMessage.error) {
+                errDiv.show();
+                errList.append(responseMessage.error);
+            } else {
+                subForm.hide();
+                $(this).val("");
+            }
+        });
+    }
+});
+
+$(document).ready(() => {
+    // Load initial jobs
+    $("#openJobSearch").triggerHandler("submit")
+});

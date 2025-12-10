@@ -1,20 +1,58 @@
-function showMessages() {
-  const params = new URLSearchParams(window.location.search);
-  const error = params.get("error");
-  const msg = params.get("msg");
+(function () {
+  const form = document.getElementById("login-form");
+  const errorDiv = document.getElementById("client-error");
 
-  const errorDiv = document.getElementById("errorMsg");
-  const successDiv = document.getElementById("successMsg");
+  if (!form) return;
 
-  if (error && errorDiv) {
-    errorDiv.textContent = error;
+  function showError(msg) {
+    if (!errorDiv) return;
+    errorDiv.textContent = msg;
     errorDiv.style.display = "block";
   }
 
-  if (msg && successDiv) {
-    successDiv.textContent = msg;
-    successDiv.style.display = "block";
+  function clearError() {
+    if (!errorDiv) return;
+    errorDiv.textContent = "";
+    errorDiv.style.display = "none";
   }
-}
 
-window.addEventListener("DOMContentLoaded", showMessages);
+  function isValidEmail(email) {
+    // Simple email format check
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
+  form.addEventListener("submit", (e) => {
+    clearError();
+
+    const email = form.email.value.trim();
+    const password = form.password.value;
+
+    if (!email || !password) {
+      e.preventDefault();
+      showError("Email and password are required.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      e.preventDefault();
+      showError("Please enter a valid email address.");
+      return;
+    }
+
+    if (password.length < 8) {
+      e.preventDefault();
+      showError("Password must be at least 8 characters.");
+      return;
+    }
+
+    const complexity = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/;
+    if (!complexity.test(password)) {
+      e.preventDefault();
+      showError(
+        "Password must contain upper and lower case letters and a number."
+      );
+      return;
+    }
+  });
+})();
