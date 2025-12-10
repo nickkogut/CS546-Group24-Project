@@ -141,47 +141,34 @@ router.post("/graphData", async (req, res) => {
 });
 
 /* ===============================
-   ADVANCED JOB LIST — 25 per page
+   ADVANCED JOB LIST
    =============================== */
 router.post("/advancedJobs", async (req, res) => {
   try {
-    let { agency, borough, yearFrom, yearTo, minAvgSalary, minCount, page } =
-      req.body;
+    const { filters, page } = req.body;
 
-    agency = agency || "";
-    borough = borough || "";
-    yearFrom = yearFrom ? Number(yearFrom) : null;
-    yearTo = yearTo ? Number(yearTo) : null;
-    minAvgSalary = minAvgSalary ? Number(minAvgSalary) : null;
-    minCount = minCount ? Number(minCount) : null;
-    page = page ? Number(page) : 1;
+    const limit = 25;
+    const pageNumber = page && Number(page) > 0 ? Number(page) : 1;
+    const skip = (pageNumber - 1) * limit;
 
-    const filters = {
-      agency,
-      borough,
-      yearFrom,
-      yearTo,
-      minAvgSalary,
-      minCount
-    };
+    // Get ALL results first
+    const allJobs = await getAdvancedJobList(filters || {});
 
-    const allJobs = await getAdvancedJobList(filters);
+    const totalPages = Math.ceil(allJobs.length / limit);
 
-    // Pagination (25 per page)
-    const perPage = 25;
-    const start = (page - 1) * perPage;
-    const paginated = allJobs.slice(start, start + perPage);
+    // Slice only the page we need
+    const jobs = allJobs.slice(skip, skip + limit);
 
     res.json({
-      jobs: paginated,
-      currentPage: page,
-      totalPages: Math.ceil(allJobs.length / perPage),
-      totalResults: allJobs.length
+      jobs,
+      totalPages,
+      currentPage: pageNumber
     });
   } catch (e) {
     res.status(500).json({ error: e.toString() });
   }
 });
+
 
 
 /* ===============================

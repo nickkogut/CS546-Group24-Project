@@ -42,6 +42,8 @@
     const experienceResults = document.getElementById("experienceResults");
 
     let chartInstance = null;
+    let advCurrentPage = 1;
+
 
     function formatMoney(n) {
       if (typeof n !== "number" || !Number.isFinite(n)) return "$0";
@@ -772,10 +774,10 @@
           }
           document.getElementById("advPagination").innerHTML = p;
         }
-
-        document.getElementById("advancedJobsBtn").onclick = () =>
-          loadAdvancedJobs(1);
-
+        document.getElementById("advancedJobsBtn").addEventListener("click", async () => {
+          advCurrentPage = 1;
+          loadAdvancedJobs();
+        });
       });
     }
   });
