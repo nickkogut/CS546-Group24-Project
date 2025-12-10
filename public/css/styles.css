@@ -8,7 +8,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 76px; 
+  height: 76px;
   padding: 0 1.5rem;
   background: #9bcceb;
   border-bottom: 1px solid #5c44bb;
@@ -49,7 +49,7 @@ body {
   font-weight: 650;
   font-size: 2.0rem;
   color: #111;
-  position: relative;    
+  position: relative;
   transition: color 0.35s ease;
 }
 
@@ -59,20 +59,33 @@ body {
   width: 100%;
   transform: scaleX(0);
   height: 2px;
-  bottom: 0;       
+  bottom: 0;
   left: 0;
   background-color: #0087ca;
-  transform-origin: bottom right;       
+  transform-origin: bottom right;
   transition: transform 0.25s ease-out;
 }
 
 .main-nav a:hover::after {
   transform: scaleX(1);
-  transform-origin: bottom left;        
+  transform-origin: bottom left;
 }
 
 main {
   max-width: 800px;
   margin: 2rem auto;
   padding: 0 1.5rem;
+}
+
+#publicProfiles {
+  border-color: black;
+  border-radius: 10px;
+  border-width: 2px;
+  border-style: solid;
+  padding: 10px;
+}
+
+#homepageDesc {
+  line-height: 1.5rem;
+  ;
 }
