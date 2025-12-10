@@ -5,7 +5,6 @@
     <p style="color:red">{{error}}</p>
   {{/if}}
 
-  {{!-- UNIFIED GRAPH SECTION --}}
   <section id="graph-section" style="margin-bottom:30px;">
     <h2>Graph salaries for a job</h2>
 
@@ -27,69 +26,138 @@
       <label for="chartType">Graph type:</label>
       <select id="chartType">
         <option value="histogram">Histogram</option>
-        <option value="boxplot">Box &amp; Whisker</option>
+        <option value="boxplot">Box & Whisker</option>
         <option value="dotplot">Dot Plot</option>
       </select>
     </div>
 
     <div style="margin-bottom:8px;">
       <label for="filterAgency">Agency (optional):</label>
-      <input id="filterAgency" type="text" placeholder="e.g. Admin For Children's Svcs" />
-
+      <select id="filterAgency">
+        <option value="">Any</option>
+        {{#each agencies}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
       <label for="filterBorough">Borough (optional):</label>
-      <input id="filterBorough" type="text" placeholder="e.g. Queens" />
+      <select id="filterBorough">
+        <option value="">Any</option>
+        {{#each boroughs}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
     </div>
 
     <div style="margin-bottom:8px;">
       <label for="filterMinSalary">Min salary (optional):</label>
-      <input id="filterMinSalary" type="number" placeholder="e.g. 30000" />
+      <input id="filterMinSalary" type="number">
     </div>
 
-    <div style="margin-bottom:8px;">
-      <button id="compareBtn">Generate Graph</button>
-    </div>
+    <button id="compareBtn">Generate Graph</button>
+    <p id="status"></p>
 
-    <p id="status" style="color:red;"></p>
-
-    <canvas
-      id="histChart"
-      width="800"
-      height="400"
-      style="background:#f6fbff;"
-    ></canvas>
-
-    <div id="listingLink" style="margin-top:8px;"></div>
+    <canvas id="histChart" width="800" height="400"></canvas>
+    <div id="listingLink"></div>
   </section>
 
   <hr>
 
-  {{!-- JOB STATS + NEXT JOBS SECTION --}}
-  <section id="job-stats" style="margin-bottom:30px;">
+  <section id="job-stats">
     <h2>Job Stats – where do people in your role move on to?</h2>
 
     <div>
-      <label for="fromJobInput">Your current job:</label>
-      <input
-        id="fromJobInput"
-        type="text"
-        placeholder="e.g. Child Protective Specialist"
-      />
+      <label>Your current job:</label>
+      <select id="fromJobInput">
+        {{#each jobs}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
+
       <button id="findTransitionsBtn">Find transitions</button>
     </div>
 
-    <p id="transitionsStatus" style="color:darkred;"></p>
+    <p id="transitionsStatus"></p>
+    <div id="transitionsList"></div>
 
-    <div id="transitionsList" style="margin-top:10px;">
-      {{!-- filled by JS --}}
+    <button id="compareSelectedBtn">Compare Selected Jobs</button>
+    <div id="compareResults"></div>
+
+    <hr>
+
+<h3>Advanced job list</h3>
+
+<div style="margin-bottom:8px;">
+  <label for="advAgency">Agency:</label>
+  <select id="advAgency">
+    <option value="">Any</option>
+    {{#each agencies}}
+      <option value="{{this}}">{{this}}</option>
+    {{/each}}
+  </select>
+
+  <label for="advBorough">Borough:</label>
+  <select id="advBorough">
+    <option value="">Any</option>
+    {{#each boroughs}}
+      <option value="{{this}}">{{this}}</option>
+    {{/each}}
+  </select>
+</div>
+
+<div style="margin-bottom:8px;">
+  <label for="advYearFrom">Year from:</label>
+  <select id="advYearFrom">
+    <option value="">Any</option>
+    {{#each years}}
+      <option value="{{this}}">{{this}}</option>
+    {{/each}}
+  </select>
+
+  <label for="advYearTo">Year to:</label>
+  <select id="advYearTo">
+    <option value="">Any</option>
+    {{#each years}}
+      <option value="{{this}}">{{this}}</option>
+    {{/each}}
+  </select>
+</div>
+
+<div style="margin-bottom:8px;">
+  <label for="advMinAvg">Min avg salary:</label>
+  <input id="advMinAvg" type="number" placeholder="e.g. 50000">
+
+  <label for="advMinCount">Min job entries:</label>
+  <input id="advMinCount" type="number" placeholder="e.g. 5">
+</div>
+
+<button id="advancedJobsBtn">Show jobs</button>
+
+<p id="advancedJobsStatus" style="color:red;"></p>
+<div id="advancedJobsResults"></div>
+
+<div id="advPagination" style="margin-top:10px;"></div>
+
+
+    <h3>Experience-based salary stats</h3>
+
+    <label for="expJobSelect">Job title:</label>
+    <select id="expJobSelect">
+      {{#each jobs}}
+        <option value="{{this}}">{{this}}</option>
+      {{/each}}
+    </select>
+
+    <div>
+      <label>Min years:</label>
+      <input id="expMinYears" type="number">
+
+      <label>Max years:</label>
+      <input id="expMaxYears" type="number">
     </div>
 
-    <div style="margin-top:10px;">
-      <button id="compareSelectedBtn">Compare Selected Jobs</button>
-    </div>
-
-    <div id="compareResults" style="margin-top:10px;">
-      {{!-- side-by-side compare table goes here --}}
-    </div>
+    <button id="expStatsBtn">Show experience stats</button>
+    <p id="expStatus"></p>
+    <div id="experienceResults"></div>
   </section>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
