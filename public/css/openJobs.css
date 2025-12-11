@@ -1,0 +1,88 @@
+#openJobSearch {
+    margin-bottom: 10px;
+    padding: 20px;
+    width: 800px - 20px;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+}
+
+.listing a {
+    color: black;
+}
+
+.listing .salary {
+    float: right;
+    margin-right: 20px;
+}
+
+#salarySlider {
+    margin: 10px 0;
+}
+
+#salaryRangeValue {
+    text-align: center;
+}
+
+#openJobSearch>* {
+    margin: 5px;
+}
+
+#agency,
+#title,
+#keywords {
+    width: 400px;
+}
+
+label {
+    display: inline-block;
+    min-width: 100px;
+}
+
+label[for="nonResidency"],
+label[for="fullTime"],
+label[for="numPerPage"] {
+    min-width: 180px;
+}
+
+
+.listing {
+    width: 800px - 10px;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+    margin-bottom: 10px;
+    padding: 10px;
+}
+
+table {
+    border-spacing: 0 10px;
+}
+
+tr td:first-child {
+    vertical-align: top;
+    min-width: 140px;
+}
+
+.showMoreLabel {
+    text-decoration: underline;
+}
+
+.showMoreLabel:hover {
+    cursor: pointer;
+}
+
+.expandJob {
+    display: none;
+}
+
+.listingSubMenu {
+    display: none;
+    border-style: solid;
+    border-color: black;
+    border-width: 1px;
+}
+
+.expandJob:checked~.listingSubMenu {
+    display: contents;
+}

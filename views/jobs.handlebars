@@ -1,7 +1,9 @@
+<link rel="stylesheet" href="/public/css/openJobs.css">
 <main>
   <h1>Open Jobs</h1>
   <div id="pageDesc">
-    <p>Browse the open job postings that best meet your criteria! <a href="/auth/login">Login</a> to upload a resume for
+    <p>Browse the open job postings that best meet your criteria! <a href="/auth/login">Login</a> and upload a resume
+      for
       more
       personalized resume-based suggestions, or to save jobs for later</p>
   </div>
@@ -25,13 +27,15 @@
 
     {{!-- Fields --}}
     <label for="agency">Agency</label>
-
     <input id="agency" name="agency" type="text" autoComplete="on" list="agencyList" placeholder="Select an Agency" />
+    <br>
     <label for="title">Job Title</label>
     <input id="title" name="title" type="text" autoComplete="on" list="titleList" placeholder="Select a Job Title" />
+    <br>
 
     <label for="keywords">Keywords</label>
     <input id="keywords" name="keywords" type="text" placeholder="Enter Job Keywords" />
+    <br>
     <label for="borough">Borough</label>
     <select id="borough" name="borough">
       <option selected value="">Any Borough</option>
@@ -41,12 +45,14 @@
       <option value="Bronx">Bronx</option>
       <option value="Brooklyn">Brooklyn</option>
     </select>
+    <br>
 
     <label for="minDate">Posted Since</label>
     <input id="minDate" name="minDate" type="date" />
 
-    <label for="salaryRangeValue">Salary Range</label>
+
     <div id="salaryRangeContainer">
+      <label for="salaryRangeValue">Salary Range</label>
       <input type="text" id="salaryRangeValue" readonly>
       <div id="salarySlider"></div>
       <input type="text" name="minSalary" id="minSalary" value="0" hidden readonly></input>
@@ -59,9 +65,11 @@
       readonly>
     <label for="nonResidency">Open to Non-Residents</label>
     <input id="nonResidency" name="nonResidency" type="checkbox" checked />
+    <br>
 
     <label for="fullTime">Full Time Only</label>
     <input id="fullTime" name="fullTime" type="checkbox" />
+    <br>
     <label for="numPerPage"> Results Per Page</label>
     <select id="numPerPage" name="numPerPage">
       <option value="10" selected>10</option>
@@ -69,8 +77,10 @@
       <option value="50">50</option>
       <option value="100">100</option>
     </select>
+    <br>
 
     {{#if isAuthenticated}}
+    <label for="jobTag">Job Tag</label>
     <select id="jobTag" name="jobTag">
       <option value="" selected>Any Job Tag</option>
       <option value="Applied">Applied</option>
@@ -80,13 +90,12 @@
     </select>
     {{/if}}
 
-    <button id="submitSearch" name="submitSearch">Search</button>
-    <button id="submitSearchWithResume" name="submitSearchWithResume">Search with My Resume</button>
-    <button id="resetSearch" name="resetSearch">Reset</button>
+    <div id="formButtons">
+      <button id="submitSearch" name="submitSearch">Search</button>
+      <button id="submitSearchWithResume" name="submitSearchWithResume">Search with My Resume</button>
+      <button id="resetSearch" name="resetSearch">Reset</button>
+    </div>
 
-    {{#if isAuthenticated}}
-    <label for="jobTag">Job Tag</label>
-    {{/if}}
 
   </form>
 
