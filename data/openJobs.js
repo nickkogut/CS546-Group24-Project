@@ -46,8 +46,8 @@ export const filterJobs = async (jobOpts) => {
 
     const resumeAndKeywords = [...new Set([...jobOpts.resume, ...jobOpts.keywords])]; // sort by results with most matching keywords (not all need to match)
 
-    jobOpts.fullTime = valOrDefault(jobOpts.fullTime, true, Boolean);
-    jobOpts.nonResidency = valOrDefault(jobOpts.nonResidency, true, Boolean);
+    jobOpts.fullTime = valOrDefault(jobOpts.fullTime, false, Boolean);
+    jobOpts.nonResidency = valOrDefault(jobOpts.nonResidency, false, Boolean);
     jobOpts.borough = valOrDefault(jobOpts.borough, "", checkBorough);
     jobOpts.minDate = valOrDefault(jobOpts.minDate, new Date("01/01/2000"), checkDate);
     jobOpts.minSalary = valOrDefault(jobOpts.minSalary, 0, checkNumber);
