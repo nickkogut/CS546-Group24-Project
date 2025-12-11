@@ -62,7 +62,6 @@ router.post("/data", async (req, res) => {
     if (!jobTitle) return res.status(400).json({ error: "Missing jobTitle" });
     const salaries = await getPayrollSalaries(jobTitle);
     res.json({ salaries });
-
   } catch (e) {
     res.status(500).json({ error: e.toString() });
   }

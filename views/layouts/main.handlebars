@@ -23,8 +23,32 @@
         <ul class="nav-links">
           <li><a href="/jobs">Jobs</a></li>
           <li><a href="/compare">Compare</a></li>
-          <li><a href="/account">My Account</a></li>
+          <li><a href="/account">My Info</a></li>
         </ul>
+        <div class="account-menu">
+      <a 
+      href=
+    {{#if isAuthenticated}}
+    "/account"
+    {{else}}
+    "/auth/login"
+    {{/if}}>
+      <img
+        src="/public/img/accountIcon.png"
+        alt="Account"
+        class="account-icon"
+      >
+    </a>
+
+    <div class="account-dropdown">
+      {{#if isAuthenticated}}
+      <a href="/auth/logout">Logout</a>
+      {{else}}  
+      <a href="/auth/login">Login</a>
+      <a href="/auth/register">Register</a>
+      {{/if}}
+    </div>
+  </div>
       </nav>
     </header>
 

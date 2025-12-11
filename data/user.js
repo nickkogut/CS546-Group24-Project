@@ -32,7 +32,7 @@ export const createUser = async ({
     borough,
     age,
     public: !!publicProfile,
-    resume,
+    resume: checkString(resume),
     hashedPassword,
     heldJobs: [],
     taggedJobs: []

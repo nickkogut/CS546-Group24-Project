@@ -1,0 +1,65 @@
+.my-info-main {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1.5rem;
+}
+
+.my-info-main h1 {
+  margin-bottom: 1rem;
+}
+
+/* #resume-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f7fbff;
+  border-radius: 6px;
+  border: 1px solid #c2d9f0;
+} */
+
+#resume-section h3 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+}
+
+#resumeText {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  padding: 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #9bb4d1;
+  font-family: inherit;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+#resumeText:focus {
+  outline: none;
+  border-color: #0087ca;
+  box-shadow: 0 0 0 2px rgba(0, 135, 202, 0.15);
+}
+
+.my-info-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.my-info-btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: 4px;
+  border: none;
+  background: #0087ca;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.my-info-btn:hover {
+  background: #006ca0;
+}
+
+#keywordsResult {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+}

@@ -13,6 +13,7 @@ import { getPublicUsers } from "../data/user.js";
 const constructorMethod = (app) => {
 
   // login / register / forgot password do not require login
+  app.use(vars);
   app.use("/auth", authRoutes);
 
   // The following routes require login
@@ -30,7 +31,7 @@ const constructorMethod = (app) => {
   app.use('/compare', jobCompareRoutes);
   app.use('/user', userRoutes);
 
-  // app.use('/account', usersRoutes);
+  app.use('/account', accountRoutes);
 
   app.use((req, res) => {
     res.status(404).json({ error: 'Route Not found' });
