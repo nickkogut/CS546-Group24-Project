@@ -5,9 +5,10 @@ import openJobsRoutes from "./openJobs.js";
 // import payrollRoutes from "./payroll.js";
 // import analysisRoutes from "./analysis.js";
 import authRoutes from "./auth.js";
-import { requireAuth } from "../middleware/auth.js";
+import { requireAuth, vars } from "../middleware/auth.js";
 import jobCompareRoutes from './jobCompare.js';
 import { getPublicUsers } from "../data/user.js";
+import accountRoutes from "./account.js";
 
 
 const constructorMethod = (app) => {
