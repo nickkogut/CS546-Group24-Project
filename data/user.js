@@ -1,4 +1,3 @@
-// data/users.js
 import { users as usersCollection } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
 import { checkString } from "../helpers.js";
@@ -16,7 +15,7 @@ export const createUser = async ({
   borough,
   age,
   resume = "",
-  publicProfile = false, // opt in
+  publicProfile = true,
   hashedPassword
 }) => {
   firstName = checkString(firstName);
@@ -33,7 +32,7 @@ export const createUser = async ({
     borough,
     age,
     public: !!publicProfile,
-    resume,
+    resume: checkString(resume),
     hashedPassword,
     heldJobs: [],
     taggedJobs: []
@@ -106,7 +105,7 @@ export const addHeldJob = async (userId, jobData) => {
 
 export const addTaggedJob = async (userId, taggedJobData) => {
   const _id = _idToObjectId(userId);
-  const jobId = _idToObjectId(taggedJobData.jobId); // unused, throws if invalid
+  const jobId = _idToObjectId(taggedJobData.jobId);
 
   const taggedJob = {
     jobId: checkString(taggedJobData.jobId),
@@ -152,6 +151,51 @@ export const removeTaggedJob = async (userId, jobId) => {
   return removalInfo;
 
 }
+
+export const updateUserResume = async (id, resumeText) => {
+  const _id = _idToObjectId(id);
+
+  resumeText = checkString(resumeText, "resume");
+  if (resumeText.length > 10000) throw "Error: resume is too long";
+
+  const users = await usersCollection();
+
+  const updateInfo = await users.findOneAndUpdate(
+    { _id },
+    { $set: { resume: resumeText } },
+    { returnDocument: "after" }
+  );
+
+  if (!updateInfo) {
+    throw "Error: could not update resume";
+  }
+  return updateInfo;
+};
+
+export const updateCurrentJob = async (userId, jobData) => {
+  const _id = _idToObjectId(userId);
+  const users = await usersCollection();
+
+  const title = checkString(jobData.title, "job title");
+
+  const currentJob = {
+    title,
+    salary: typeof jobData.salary === "number" ? jobData.salary : null,
+    borough: jobData.borough ? checkString(jobData.borough, "borough") : null,
+    startDate: jobData.startDate || null
+  };
+
+  const updateInfo = await users.updateOne(
+    { _id },
+    { $set: { currentJob } }
+  );
+
+  if (!updateInfo || updateInfo.modifiedCount === 0) {
+    throw "Error: could not update current job";
+  }
+
+  return updateInfo;
+};
 
 export const getPublicUsers = async (numResults) => {
   // Returns up to numResults users with public profiles

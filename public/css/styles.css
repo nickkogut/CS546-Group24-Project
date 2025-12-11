@@ -11,7 +11,7 @@ body {
   height: 76px;
   padding: 0 1.5rem;
   background: #9bcceb;
-  border-bottom: 1px solid #5c44bb;
+  border-bottom: 1px solid #000000;
 }
 
 .logo-link {
@@ -35,6 +35,12 @@ body {
   font-size: 2.0rem;
 }
 
+.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .main-nav .nav-links {
   list-style: none;
   display: flex;
@@ -43,7 +49,7 @@ body {
   padding: 0;
 }
 
-.main-nav a {
+.nav-links a {
   text-decoration: none;
   margin-left: 10px;
   font-weight: 650;
@@ -53,7 +59,7 @@ body {
   transition: color 0.35s ease;
 }
 
-.main-nav a::after {
+.nav-links a::after {
   content: '';
   position: absolute;
   width: 100%;
@@ -66,7 +72,7 @@ body {
   transition: transform 0.25s ease-out;
 }
 
-.main-nav a:hover::after {
+.nav-links a:hover::after {
   transform: scaleX(1);
   transform-origin: bottom left;
 }
@@ -88,4 +94,64 @@ main {
 #homepageDesc {
   line-height: 1.5rem;
   ;
+}
+
+.account-menu {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding-bottom: 0.5rem;
+  margin-bottom: -0.5rem; 
+}
+
+.account-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #0087ca;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+  padding: 0.5rem 0;
+  min-width: 160px;
+  opacity: 0;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
+}
+
+.account-menu:hover .account-dropdown {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.account-dropdown a {
+  display: block;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.95rem;
+  color: #111;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.account-dropdown a:hover {
+  background: #f0f5ff;
+}
+
+.account-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-icon {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  object-fit: contain;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }

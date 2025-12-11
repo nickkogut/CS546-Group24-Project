@@ -76,7 +76,6 @@ router.post("/register", async (req, res) => {
       firstName,
       lastName,
       email,
-      borough,
       age: ageNum,
       hashedPassword,
       public: isPublic,

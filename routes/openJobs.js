@@ -5,7 +5,7 @@ import { users } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
 
 const router = Router();
-const pageTitle = 'Jobs | CareerScope NYC';
+const pageTitle = 'Jobs';
 
 router.get("/", async (req, res) => {
     try {
