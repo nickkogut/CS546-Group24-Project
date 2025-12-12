@@ -111,3 +111,14 @@ body {
   color: #166534;
   border: 1px solid #bbf7d0;
 }
+
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
