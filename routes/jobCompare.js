@@ -13,6 +13,7 @@ import {
 } from "../data/payrollJobs.js";
 
 import { payrollJobs } from "../config/mongoCollections.js";
+import { getUserById } from "../data/user.js";
 
 const router = Router();
 
@@ -57,6 +58,42 @@ router.get("/", async (req, res) => {
       jobs: [],
       error: e.toString()
     });
+  }
+});
+
+
+// ===============================
+// AUTO-FILL FROM USER PROFILE
+// ===============================
+router.get("/autofill", async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "You must be logged in to use autofill." });
+  }
+
+  try {
+    const user = await getUserById(req.session.user._id);
+    const jobs = Array.isArray(user.heldJobs) ? user.heldJobs : [];
+
+    if (jobs.length === 0) {
+      return res.status(400).json({ error: "No job history found in your profile." });
+    }
+
+    let current = jobs.find(j => j.currentJob);
+
+    // fallback → pick latest job by start date
+    if (!current) {
+      current = jobs
+        .filter(j => j.startDate)
+        .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0] || jobs[0];
+    }
+
+    return res.json({
+      title: current.title || "",
+      salary: current.salary || "",
+      borough: current.borough || ""
+    });
+  } catch (e) {
+    return res.status(500).json({ error: e.toString() });
   }
 });
 
