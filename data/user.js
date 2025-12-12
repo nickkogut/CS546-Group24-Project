@@ -241,16 +241,20 @@ export const getMatchingTaggedJobs = async (userId, jobList) => {
     }
   ).toArray();
 
-  const filtered = taggedJobMatches[0].taggedJobs.filter(j =>
-    jobList.includes(j.jobId)
-  );
+  if (taggedJobMatches.length > 0) {
+    const filtered = taggedJobMatches[0].taggedJobs.filter(j =>
+      jobList.includes(j.jobId)
+    );
 
 
-  if (filtered.length > 0) {
-    filtered.forEach((match) => {
-      output[match.jobId] = match;
-    });
+    if (filtered.length > 0) {
+      filtered.forEach((match) => {
+        output[match.jobId] = match;
+      });
+    }
   }
+
+
 
 
   return output;
