@@ -1,0 +1,22 @@
+<main class="my-info-main">
+  {{#if notFound}}
+    <h1>Profile not found</h1>
+  {{else}}
+    <h1>{{profileUser.firstName}} {{profileUser.lastName}}</h1>
+
+    <h3>Job history</h3>
+    {{#if hasJobs}}
+      {{#each heldJobs}}
+        <div class="job-card">
+          <strong>{{title}}</strong>
+          {{#if currentJob}} <span>(Current)</span>{{/if}}
+          {{#if salary}}<div>Salary: {{salary}}</div>{{/if}}
+          {{#if startDate}}<div>Start: {{startDate}}</div>{{/if}}
+          {{#if borough}}<div>Borough: {{borough}}</div>{{/if}}
+        </div>
+      {{/each}}
+    {{else}}
+      <p>No job history available.</p>
+    {{/if}}
+  {{/if}}
+</main>

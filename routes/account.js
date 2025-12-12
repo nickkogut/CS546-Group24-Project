@@ -1,40 +1,45 @@
 import { Router } from "express";
 import { applyXSS, checkString } from "../helpers.js";
-import { getUserById, updateUserResume, updateCurrentJob } from "../data/user.js";
+import { getUserById, updateUserResume, addJobHistory } from "../data/user.js";
 import { getDropdownOptions } from "../data/openJobs.js";
 
 const router = Router();
-const pageTitle = "My Info | CareerScope NYC";
+const pageTitle = "My Info";
+const boroughs = ["", "Manhattan", "Brooklyn", "Queens", "Bronx"];
 
 async function buildAccountViewModel(userId, extras = {}) {
   const user = await getUserById(userId);
   const dropdownOptions = await getDropdownOptions();
 
-  const currentJob = user.currentJob || {};
-  const borough = currentJob.borough || "";
-
-  let startDateValue = "";
-  if (currentJob.startDate instanceof Date) {
-    startDateValue = currentJob.startDate.toISOString().slice(0, 10);
-  } else if (
-    typeof currentJob.startDate === "string" &&
-    currentJob.startDate.length >= 10
-  ) {
-    startDateValue = currentJob.startDate.slice(0, 10);
-  }
-
   const resumeRaw = user.resume || "";
   const hasResume = resumeRaw.trim().length > 0;
 
-  let salary = currentJob.salary;
-  if (typeof salary !== "number") {
-    salary = "";
-  }
+  const heldJobsRaw = Array.isArray(user.heldJobs) ? user.heldJobs : [];
+  const heldJobs = heldJobsRaw.map((j) => {
+    let startDateValue = "";
+    if (j.startDate instanceof Date) startDateValue = j.startDate.toISOString().slice(0, 10);
+    else if (typeof j.startDate === "string" && j.startDate.length >= 10) startDateValue = j.startDate.slice(0, 10);
+
+    return {
+      _id: j._id?.toString?.() || "",
+      title: j.title || "",
+      salary: typeof j.salary === "number" ? j.salary : "",
+      startDate: startDateValue,
+      borough: j.borough || "",
+      currentJob: !!j.currentJob
+    };
+  });
+
+  heldJobs.sort((a, b) => (b.currentJob - a.currentJob));
+
+  const jobBoroughValue = extras.jobBoroughValue || "";
   return {
     title: pageTitle,
     cssFile: "myinfo.css",
+
     resumeText: resumeRaw,
     hasResume,
+
     currentUser: {
       _id: user._id.toString(),
       firstName: user.firstName,
@@ -44,17 +49,24 @@ async function buildAccountViewModel(userId, extras = {}) {
       age: user.age,
       public: user.public
     },
-    currentJobTitle: currentJob.title || "",
-    currentJobSalary: salary,
-    currentJobStartDate: startDateValue,
-    currentJobBorough: borough,
-    boroughIsManhattan: borough === "Manhattan",
-    boroughIsBrooklyn: borough === "Brooklyn",
-    boroughIsQueens: borough === "Queens",
-    boroughIsBronx: borough === "Bronx",
-    boroughIsStatenIsland: borough === "Staten Island",
 
+    // Add-job form values (for re-render on error)
+    jobTitleValue: extras.jobTitleValue || "",
+    jobSalaryValue: extras.jobSalaryValue || "",
+    jobStartDateValue: extras.jobStartDateValue || "",
+    jobBoroughValue,
+    jobBoroughIsManhattan: jobBoroughValue === "Manhattan",
+    jobBoroughIsBrooklyn: jobBoroughValue === "Brooklyn",
+    jobBoroughIsQueens: jobBoroughValue === "Queens",
+    jobBoroughIsBronx: jobBoroughValue === "Bronx",
+    jobIsCurrent: !!extras.jobIsCurrent,
+
+    // Suggestions
     jobTitles: dropdownOptions.titles,
+
+    // Job history list
+    heldJobs,
+    hasJobs: heldJobs.length > 0,
 
     resumeError: null,
     jobError: null,
@@ -64,9 +76,7 @@ async function buildAccountViewModel(userId, extras = {}) {
 }
 
 router.get("/", async (req, res) => {
-  if (!req.session.user) {
-    return res.redirect("/auth/login");
-  }
+  if (!req.session.user) return res.redirect("/auth/login");
 
   try {
     const viewModel = await buildAccountViewModel(req.session.user._id);
@@ -82,109 +92,61 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/resume", async (req, res) => {
-  if (!req.session.user) {
-    return res.redirect("/auth/login");
-  }
+  if (!req.session.user) return res.redirect("/auth/login");
 
   req.body = applyXSS(req.body);
-
   let { resumeText } = req.body;
 
   try {
     resumeText = checkString(resumeText, "resume");
-
     await updateUserResume(req.session.user._id, resumeText);
     return res.redirect("/account");
   } catch (e) {
-    try {
-      const viewModel = await buildAccountViewModel(req.session.user._id, {
-        resumeError: e.toString(),
-        resumeText: applyXSS(resumeText),
-        hasResume: resumeText && resumeText.trim().length > 0
-      });
-      return res.status(400).render("account", viewModel);
-    } catch {
-      return res.status(500).render("account", {
-        title: pageTitle,
-        cssFile: "myinfo.css",
-        resumeError: "Could not update resume."
-      });
-    }
+    const viewModel = await buildAccountViewModel(req.session.user._id, {
+      resumeError: e.toString(),
+      resumeText: applyXSS(resumeText),
+      hasResume: resumeText && resumeText.trim().length > 0
+    });
+    return res.status(400).render("account", viewModel);
   }
 });
 
-router.post("/current-job", async (req, res) => {
-  if (!req.session.user) {
-    return res.redirect("/auth/login");
-  }
+// NEW: add job to history
+router.post("/jobs", async (req, res) => {
+  if (!req.session.user) return res.redirect("/auth/login");
 
   req.body = applyXSS(req.body);
 
-  let { jobTitle, salary, startDate, borough } = req.body;
+  let { jobTitle, salary, startDate, borough, currentJob } = req.body;
 
   try {
-    jobTitle = checkString(jobTitle, "job title");
-    jobTitle = jobTitle.trim();
-    if (jobTitle.length === 0) {
-      throw "Error: job title is required";
-    }
-    if (jobTitle.length > 100) {
-      throw "Error: job title is too long";
+    jobTitle = checkString(jobTitle, "job title").trim();
+    if (jobTitle.length === 0) throw "Error: job title is required";
+    if (jobTitle.length > 100) throw "Error: job title is too long";
+
+    if (borough && !boroughs.includes(borough)) {
+      throw "Error: invalid borough";
     }
 
-    let salaryNum = null;
-    if (salary && salary.trim() !== "") {
-      const parsed = Number(salary);
-      if (parsed < 0) {
-        throw "Error: salary must be a non-negative number";
-      }
-      salaryNum = parsed;
-    }
-
-    let startDateVal = null;
-    if (startDate && startDate.trim() !== "") {
-      const d = new Date(startDate);
-      if (isNaN(d.getTime())) {
-        throw "Error: invalid start date";
-      }
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      if (d > today) {
-        throw "Error: start date cannot be in the future";
-      }
-      startDateVal = d;
-    }
-
-    let boroughClean = "";
-    if (borough && borough.trim() !== "") {
-      boroughClean = checkString(borough, "borough");
-    }
-
-    await updateCurrentJob(req.session.user._id, {
+    await addJobHistory(req.session.user._id, {
       title: jobTitle,
-      salary: salaryNum,
-      startDate: startDateVal,
-      borough: boroughClean
+      salary,
+      startDate,
+      borough: borough || "",
+      currentJob: !!currentJob
     });
 
     return res.redirect("/account");
   } catch (e) {
-    try {
-      const viewModel = await buildAccountViewModel(req.session.user._id, {
-        jobError: e.toString(),
-        currentJobTitle: jobTitle,
-        currentJobSalary: salary,
-        currentJobStartDate: startDate,
-        currentJobBorough: borough
-      });
-      return res.status(400).render("account", viewModel);
-    } catch {
-      return res.status(500).render("account", {
-        title: pageTitle,
-        cssFile: "myinfo.css",
-        jobError: "Could not update current job."
-      });
-    }
+    const viewModel = await buildAccountViewModel(req.session.user._id, {
+      jobError: e.toString(),
+      jobTitleValue: jobTitle || "",
+      jobSalaryValue: salary || "",
+      jobStartDateValue: startDate || "",
+      jobBoroughValue: borough || "",
+      jobIsCurrent: !!currentJob
+    });
+    return res.status(400).render("account", viewModel);
   }
 });
 

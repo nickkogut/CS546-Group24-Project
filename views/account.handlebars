@@ -23,19 +23,16 @@
   </p>
 
   <section id="resume-section">
-    <h3 id>
+    <h3 id="resumeHeading">
       {{#if hasResume}}
         Your resume
-        {{else}}
+      {{else}}
         Paste your resume
-        {{/if}}
-        </h3>
+      {{/if}}
+    </h3>
+
     <form id="resume-form" method="post" action="/account/resume">
-      <textarea
-        id="resumeText"
-        name="resumeText"
-        rows="10"
-      >{{resumeText}}</textarea>
+      <textarea id="resumeText" name="resumeText" rows="10">{{resumeText}}</textarea>
 
       <div class="resume-actions">
         <button type="submit" id="saveResumeBtn" class="btn">Save resume</button>
@@ -45,67 +42,84 @@
     </form>
   </section>
 
-  <section id="current-job-section">
-    <h3>Current job</h3>
-    <form id="current-job-form" method="post" action="/account/current-job">
+  <section id="job-history-section">
+    <h3>Add job</h3>
+
+    <form id="add-job-form" method="post" action="/account/jobs">
       <div class="field">
-        <label for="currentJobTitle">Job title</label>
-        <input
-          list="jobTitleList"
-          id="currentJobTitle"
-          name="jobTitle"
-          type="text"
-          value="{{currentJobTitle}}"
-        >
-        <datalist id="jobTitleList">
+        <label for="jobTitle">Job title</label>
+
+        <select id="jobTitle" name="jobTitle" required>
+          <option value="">Select a job title</option>
           {{#if jobTitles}}
             {{#each jobTitles}}
-              <option value="{{this}}"></option>
+              <option value="{{this}}">{{this}}</option>
             {{/each}}
           {{/if}}
-        </datalist>
+        </select>
       </div>
 
       <div class="field">
-        <label for="currentJobSalary">Current salary (annual, $)</label>
+        <label for="jobSalary">Salary (annual, $)</label>
         <input
-          id="currentJobSalary"
+          id="jobSalary"
           name="salary"
           type="number"
           min="0"
           step="1000"
-          value="{{currentJobSalary}}"
+          value="{{jobSalaryValue}}"
         >
       </div>
 
       <div class="field">
-        <label for="currentJobStartDate">Start date</label>
-        <input
-          id="currentJobStartDate"
-          name="startDate"
-          type="date"
-          value="{{currentJobStartDate}}"
-        >
+        <label for="jobStartDate">Start date (optional)</label>
+        <input id="jobStartDate" name="startDate" type="date" value="{{jobStartDateValue}}">
       </div>
 
       <div class="field">
-        <label for="currentJobBorough">Work borough (optional)</label>
-        <select id="currentJobBorough" name="borough">
+        <label for="jobBorough">Work borough (optional)</label>
+        <select id="jobBorough" name="borough">
           <option value="">Select borough</option>
-          <option value="Manhattan" {{#if boroughIsManhattan}}selected{{/if}}>Manhattan</option>
-          <option value="Brooklyn" {{#if boroughIsBrooklyn}}selected{{/if}}>Brooklyn</option>
-          <option value="Queens" {{#if boroughIsQueens}}selected{{/if}}>Queens</option>
-          <option value="Bronx" {{#if boroughIsBronx}}selected{{/if}}>Bronx</option>
-          <option value="Staten Island" {{#if boroughIsStatenIsland}}selected{{/if}}>Staten Island</option>
+          <option value="Manhattan" {{#if jobBoroughIsManhattan}}selected{{/if}}>Manhattan</option>
+          <option value="Brooklyn" {{#if jobBoroughIsBrooklyn}}selected{{/if}}>Brooklyn</option>
+          <option value="Queens" {{#if jobBoroughIsQueens}}selected{{/if}}>Queens</option>
+          <option value="Bronx" {{#if jobBoroughIsBronx}}selected{{/if}}>Bronx</option>
         </select>
       </div>
 
+      <div class="field checkbox-field">
+        <label>
+          <input type="checkbox" id="jobCurrent" name="currentJob" {{#if jobIsCurrent}}checked{{/if}}>
+          I am currently working here
+        </label>
+      </div>
+
       <div class="job-actions">
-        <button type="submit" id="saveJobBtn" class="btn">Save job</button>
-        <button type="button" id="editJobBtn" class="btn secondary">Edit</button>
-        <button type="button" id="clearJobBtn" class="btn secondary">Clear</button>
+        <button type="submit" class="btn">Add job</button>
+        <button type="button" id="clearAddJobBtn" class="btn secondary">Clear</button>
       </div>
     </form>
+
+    <h3>Job history</h3>
+    {{#if hasJobs}}
+      {{#each heldJobs}}
+        <div class="job-card">
+          <strong>{{title}}</strong>
+          {{#if currentJob}} <span>(Current)</span>{{/if}}
+
+          {{#if salary}}
+            <div>Salary: {{formatMoney salary}}</div>
+          {{/if}}
+
+          {{#if startDate}}
+            <div>Start: {{formatDate startDate}}</div>
+          {{/if}}
+          {{#if borough}}<div>Borough: {{borough}}</div>{{/if}}
+        </div>
+      {{/each}}
+    {{else}}
+      <p>No jobs added yet.</p>
+    {{/if}}
   </section>
 
   <script src="/public/js/account.js"></script>

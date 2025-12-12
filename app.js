@@ -1,13 +1,14 @@
-// app.js
 import express from "express";
-import Handlebars from 'handlebars';
-import exphbs from 'express-handlebars';
-import { mongoConfig } from "./config/settings.js";
-import configRoutes from './routes/index.js';
-import session from 'express-session';
+import Handlebars from "handlebars";
+import exphbs from "express-handlebars";
+import {mongoConfig} from "./config/settings.js";
+import configRoutes from "./routes/index.js";
+import session from "express-session";
 import MongoStore from "connect-mongo";
 import dotenv from "dotenv";
+import {formatMoney, formatDate} from "./helpers.js"; 
 dotenv.config();
+
 const app = express();
 
 app.use(
@@ -35,46 +36,46 @@ app.use((req, res, next) => {
     } else {
       const diff = now - req.session.lastActivity;
       if (diff > 20 * 60 * 1000) {
-        // More than 20 minutes of inactivity
         req.session.destroy(() => {
-          return res.status(440).json({ error: "Session expired. Please log in again." });
+          return res
+            .status(440)
+            .json({ error: "Session expired. Please log in again." });
         });
         return;
       }
     }
-    // Update last activity time
     req.session.lastActivity = now;
   }
   next();
 });
 
-const staticDir = express.static('public');
+const staticDir = express.static("public");
 
 const handlebarsInstance = exphbs.create({
-  defaultLayout: 'main',
+  defaultLayout: "main",
   helpers: {
     asJSON: (obj, spacing) => {
-      if (typeof spacing === 'number') {
-        return new Handlebars.SafeString(
-          JSON.stringify(obj, null, spacing)
-        );
+      if (typeof spacing === "number") {
+        return new Handlebars.SafeString(JSON.stringify(obj, null, spacing));
       }
-
       return new Handlebars.SafeString(JSON.stringify(obj));
-    }
-  },
+    },
+    formatMoney,
+    formatDate
+  }
 });
 
-app.use('/public', staticDir);
+app.use("/public", staticDir);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.engine('handlebars', handlebarsInstance.engine);
-app.set('view engine', 'handlebars');
+app.engine("handlebars", handlebarsInstance.engine);
+app.set("view engine", "handlebars");
 app.use(express.static("public"));
+
 configRoutes(app);
 
 app.listen(3000, () => {
   console.log("We've now got a server!");
-  console.log('Your routes will be running on http://localhost:3000');
+  console.log("Your routes will be running on http://localhost:3000");
 });
