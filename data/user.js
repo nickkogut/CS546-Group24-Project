@@ -1,6 +1,7 @@
 import { users as usersCollection } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
 import { checkString } from "../helpers.js";
+import { application } from "express";
 
 const _idToObjectId = (id) => {
   if (!ObjectId.isValid(id)) throw "Error: invalid ObjectId";
@@ -104,7 +105,7 @@ export const addHeldJob = async (userId, jobData) => {
 
 export const addTaggedJob = async (userId, taggedJobData) => {
   const _id = _idToObjectId(userId);
-  const jobId = _idToObjectId(taggedJobData.jobId); 
+  const jobId = _idToObjectId(taggedJobData.jobId);
 
   const taggedJob = {
     jobId: checkString(taggedJobData.jobId),
@@ -208,4 +209,53 @@ export const getPublicUsers = async (numResults) => {
   } else {
     return [];
   }
+}
+
+export const getMatchingTaggedJobs = async (userId, jobList) => {
+  // Takes a list of open job ids
+  // Returns an object matching each job id to its tagged job entry if it exists, or to an object with all fields set to default values otherwise
+  // Used for pre-populating tag information on the openJobs page for authed users
+  const output = {};
+
+  jobList.map((jobId) => {
+    return checkString(jobId);
+  });
+
+  jobList.forEach((jobId) => {
+    output[jobId] = { jobId: output.jobId, applicationStatus: "", notes: "", confidence: 5 };
+  });
+
+  userId = _idToObjectId(checkString(userId));
+
+  const usersCol = await usersCollection();
+  const taggedJobMatches = await usersCol.find(
+    {
+      _id: new ObjectId(userId),
+      "taggedJobs.jobId": { $in: jobList }
+    },
+    {
+      projection: {
+        taggedJobs: 1,
+        _id: 0
+      }
+    }
+  ).toArray();
+
+  if (taggedJobMatches.length > 0) {
+    const filtered = taggedJobMatches[0].taggedJobs.filter(j =>
+      jobList.includes(j.jobId)
+    );
+
+
+    if (filtered.length > 0) {
+      filtered.forEach((match) => {
+        output[match.jobId] = match;
+      });
+    }
+  }
+
+
+
+
+  return output;
 }

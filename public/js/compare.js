@@ -42,8 +42,6 @@
     const experienceResults = document.getElementById("experienceResults");
 
     let chartInstance = null;
-    let advCurrentPage = 1;
-
 
     function formatMoney(n) {
       if (typeof n !== "number" || !Number.isFinite(n)) return "$0";
@@ -481,6 +479,7 @@
           transitions.slice(0, 5).forEach((t) => {
             const div = document.createElement("div");
             div.style.padding = "6px";
+
             div.innerHTML = `
               <label>
                 <input type="checkbox" class="transition-checkbox" data-title="${escapeHtml(
@@ -488,10 +487,16 @@
                 )}" />
                 <strong>${escapeHtml(t.title)}</strong>
               </label>
-              &nbsp;&nbsp; Avg: ${
-                t.avgSalary ? formatMoney(t.avgSalary) : "(n/a)"
-              } &nbsp;&nbsp; Count: ${t.count}
+              &nbsp;&nbsp; Avg: ${t.avgSalary ? formatMoney(t.avgSalary) : "(n/a)"}
+              &nbsp;&nbsp; Count: ${t.count}
+              ${
+                t.url
+                  ? `&nbsp;&nbsp;<a href="${t.url}" target="_blank">(Open Jobs)</a>`
+                  : ""
+              }
             `;
+
+
             transitionsList.appendChild(div);
           });
         } catch (e) {
@@ -538,10 +543,10 @@
           compareResults.innerHTML = `
             <table border="1" cellpadding="6">
               <tr>
-                <th>Stat</th>
+                <th>Overall Stats</th>
                 <th>${escapeHtml(a.title)}</th>
                 <th>${escapeHtml(b.title)}</th>
-                <th>% diff (B vs A)</th>
+                <th>% diff</th>
               </tr>
               <tr>
                 <td>Avg</td>
@@ -583,73 +588,105 @@
       });
     }
 
-    if (advancedJobsBtn) {
-      advancedJobsBtn.addEventListener("click", async () => {
-        advancedJobsStatus.textContent = "";
-        advancedJobsResults.innerHTML = "";
+// ===================
+// ADVANCED JOB LIST
+// ===================
+async function loadAdvancedJobs(page = 1) {
+  advancedJobsStatus.textContent = "";
+  advancedJobsResults.innerHTML = "";
 
-        const filters = {};
-        if (advAgency.value) filters.agency = advAgency.value.trim();
-        if (advBorough.value) filters.borough = advBorough.value.trim();
+  const filters = {};
 
-        if (advYearFrom.value) {
-          const v = Number(advYearFrom.value);
-          if (Number.isFinite(v)) filters.yearFrom = v;
-        }
-        if (advYearTo.value) {
-          const v = Number(advYearTo.value);
-          if (Number.isFinite(v)) filters.yearTo = v;
-        }
-        if (advMinAvg.value) {
-          const v = Number(advMinAvg.value);
-          if (Number.isFinite(v)) filters.minAvgSalary = v;
-        }
-        if (advMinCount.value) {
-          const v = Number(advMinCount.value);
-          if (Number.isFinite(v)) filters.minCount = v;
-        }
+  if (advAgency.value) filters.agency = advAgency.value.trim();
+  if (advBorough.value) filters.borough = advBorough.value.trim();
 
-        try {
-          const res = await fetch("/compare/advancedJobs", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ filters }),
-          });
-          if (!res.ok) {
-            advancedJobsStatus.textContent = "Server error. See console.";
-            console.error("advancedJobs non-ok", await res.text());
-            return;
-          }
-          const json = await res.json();
-          const jobs = Array.isArray(json.jobs) ? json.jobs : [];
+  if (advYearFrom.value) {
+    const v = Number(advYearFrom.value);
+    if (Number.isFinite(v)) filters.yearFrom = v;
+  }
+  if (advYearTo.value) {
+    const v = Number(advYearTo.value);
+    if (Number.isFinite(v)) filters.yearTo = v;
+  }
+  if (advMinAvg.value) {
+    const v = Number(advMinAvg.value);
+    if (Number.isFinite(v)) filters.minAvgSalary = v;
+  }
+  if (advMinCount.value) {
+    const v = Number(advMinCount.value);
+    if (Number.isFinite(v)) filters.minCount = v;
+  }
 
-          if (!jobs.length) {
-            advancedJobsStatus.textContent = "No jobs matched those filters.";
-            return;
-          }
+  try {
+    const res = await fetch("/compare/advancedJobs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        agency: filters.agency || "",
+        borough: filters.borough || "",
+        yearFrom: filters.yearFrom || "",
+        yearTo: filters.yearTo || "",
+        minAvgSalary: filters.minAvgSalary || "",
+        minCount: filters.minCount || "",
+        page
+      })
+    });
 
-          let html = "<table border='1' cellpadding='6'><tr><th>Job Title</th><th>Avg Salary</th><th>Entries</th><th>Year Range</th></tr>";
-          jobs.forEach((j) => {
-            const yr =
-              j.minYear && j.maxYear
-                ? `${j.minYear} – ${j.maxYear}`
-                : "(n/a)";
-            html += `<tr>
-              <td>${escapeHtml(j.title)}</td>
-              <td>${j.avgSalary ? formatMoney(j.avgSalary) : "(n/a)"}</td>
-              <td>${j.count}</td>
-              <td>${yr}</td>
-            </tr>`;
-          });
-          html += "</table>";
-          advancedJobsResults.innerHTML = html;
-        } catch (e) {
-          advancedJobsStatus.textContent =
-            "Error loading jobs. Check console.";
-          console.error(e);
-        }
-      });
+    if (!res.ok) {
+      advancedJobsStatus.textContent = "Server error. See console.";
+      return;
     }
+
+    const json = await res.json();
+    const jobs = json.jobs || [];
+
+    if (!jobs.length) {
+      advancedJobsStatus.textContent = "No jobs matched those filters.";
+      return;
+    }
+
+    let html = "<table border='1' cellpadding='6'><tr><th>Job Title</th><th>Avg Salary</th><th>Entries</th><th>Year Range</th></tr>";
+
+    jobs.forEach((j) => {
+      const yr = (j.minYear && j.maxYear) ? `${j.minYear} – ${j.maxYear}` : "(n/a)";
+      html += `<tr>
+        <td>${escapeHtml(j.title)}</td>
+        <td>${j.avgSalary ? formatMoney(j.avgSalary) : "(n/a)"}</td>
+        <td>${j.count}</td>
+        <td>${yr}</td>
+      </tr>`;
+    });
+
+    html += "</table>";
+
+    // PAGINATION BUTTONS
+    html += `<div id="advPagination" style="margin-top:12px;">`;
+
+    if (json.currentPage > 1)
+      html += `<button id="advPrev">Previous</button>`;
+
+    if (json.currentPage < json.totalPages)
+      html += `<button id="advNext">Next</button>`;
+
+    html += `</div>`;
+
+    advancedJobsResults.innerHTML = html;
+
+    const prev = document.getElementById("advPrev");
+    const next = document.getElementById("advNext");
+
+    if (prev) prev.addEventListener("click", () => loadAdvancedJobs(json.currentPage - 1));
+    if (next) next.addEventListener("click", () => loadAdvancedJobs(json.currentPage + 1));
+
+  } catch (e) {
+    advancedJobsStatus.textContent = "Error loading jobs. Check console.";
+  }
+}
+
+if (advancedJobsBtn) {
+  advancedJobsBtn.addEventListener("click", () => loadAdvancedJobs(1));
+}
+
 
     if (expStatsBtn) {
       expStatsBtn.addEventListener("click", async () => {
@@ -719,65 +756,6 @@
             "Error loading experience stats. Check console.";
           console.error(e);
         }
-        /* ========================================
-          ADVANCED JOB LIST — Pagination + Fetch
-          ======================================== */
-          async function loadAdvancedJobs(page = 1) {
-          const agency = document.getElementById("advAgency").value;
-          const borough = document.getElementById("advBorough").value;
-          const yearFrom = document.getElementById("advYearFrom").value;
-          const yearTo = document.getElementById("advYearTo").value;
-          const minAvgSalary = document.getElementById("advMinAvg").value;
-          const minCount = document.getElementById("advMinCount").value;
-
-          const res = await fetch("/compare/advancedJobs", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              agency,
-              borough,
-              yearFrom,
-              yearTo,
-              minAvgSalary,
-              minCount,
-              page
-            })
-          });
-
-          const data = await res.json();
-          if (data.error) {
-            document.getElementById("advancedJobsStatus").innerText = data.error;
-            return;
-          }
-
-          const list = data.jobs
-            .map(
-              j => `
-              <div>
-                <b>${j.title}</b> — Avg: $${Math.round(j.avgSalary)}  
-                (${j.count} entries)  
-                <br><i>${j.minYear} - ${j.maxYear}</i>
-              </div><br>
-            `
-            )
-            .join("");
-
-          document.getElementById("advancedJobsResults").innerHTML = list;
-
-          // Pagination
-          let p = "";
-          if (data.currentPage > 1) {
-            p += `<button onclick="loadAdvancedJobs(${data.currentPage - 1})">Prev</button>`;
-          }
-          if (data.currentPage < data.totalPages) {
-            p += `<button onclick="loadAdvancedJobs(${data.currentPage + 1})">Next</button>`;
-          }
-          document.getElementById("advPagination").innerHTML = p;
-        }
-        document.getElementById("advancedJobsBtn").addEventListener("click", async () => {
-          advCurrentPage = 1;
-          loadAdvancedJobs();
-        });
       });
     }
   });
