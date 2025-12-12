@@ -20,21 +20,27 @@ const router = Router();
    =============================== */
 router.get("/", async (req, res) => {
   try {
-    const titles = await getAllPayrollTitles();
-
     const col = await payrollJobs();
-    const docs = await col
-      .find({})
-      .project({ borough: 1, agency: 1, startYear: 1, endYear: 1 })
-      .toArray();
 
-    const boroughs = [...new Set(docs.map(d => d.borough).filter(Boolean))].sort();
-    const agencies = [...new Set(docs.map(d => d.agency).filter(Boolean))].sort();
+    const titles = (await col.distinct("title"))
+      .map(t => (t || "").trim())
+      .filter(t => t.length > 0)
+      .sort((a, b) => a.localeCompare(b));
 
-    const years = [...new Set(
-      docs.flatMap(d => [d.startYear, d.endYear])
-        .filter(y => Number.isFinite(y) && y > 1900 && y < 2100)
-    )].sort((a, b) => a - b);
+    const boroughs = (await col.distinct("borough"))
+      .filter(Boolean)
+      .sort();
+
+    const agencies = (await col.distinct("agency"))
+      .filter(Boolean)
+      .sort();
+
+    const startYears = await col.distinct("startYear");
+    const endYears   = await col.distinct("endYear");
+
+    const years = [...new Set([...startYears, ...endYears])]
+      .filter(y => Number.isFinite(y) && y > 1900 && y < 2100)
+      .sort((a, b) => a - b);
 
     res.render("compare", {
       title: "Compare Salaries",
@@ -52,6 +58,7 @@ router.get("/", async (req, res) => {
     });
   }
 });
+
 
 /* ===============================
    BASIC GRAPH SALARY DATA
@@ -141,34 +148,47 @@ router.post("/graphData", async (req, res) => {
 });
 
 /* ===============================
-   ADVANCED JOB LIST
+   ADVANCED JOB LIST 
    =============================== */
 router.post("/advancedJobs", async (req, res) => {
   try {
-    const { filters, page } = req.body;
+    let { agency, borough, yearFrom, yearTo, minAvgSalary, minCount, page } =
+      req.body;
 
-    const limit = 25;
-    const pageNumber = page && Number(page) > 0 ? Number(page) : 1;
-    const skip = (pageNumber - 1) * limit;
+    agency = agency || "";
+    borough = borough || "";
+    yearFrom = yearFrom ? Number(yearFrom) : null;
+    yearTo = yearTo ? Number(yearTo) : null;
+    minAvgSalary = minAvgSalary ? Number(minAvgSalary) : null;
+    minCount = minCount ? Number(minCount) : null;
+    page = page ? Number(page) : 1;
 
-    // Get ALL results first
-    const allJobs = await getAdvancedJobList(filters || {});
+    const filters = {
+      agency,
+      borough,
+      yearFrom,
+      yearTo,
+      minAvgSalary,
+      minCount
+    };
 
-    const totalPages = Math.ceil(allJobs.length / limit);
+    const allJobs = await getAdvancedJobList(filters);
 
-    // Slice only the page we need
-    const jobs = allJobs.slice(skip, skip + limit);
+    // Pagination (25 per page)
+    const perPage = 25;
+    const start = (page - 1) * perPage;
+    const paginated = allJobs.slice(start, start + perPage);
 
     res.json({
-      jobs,
-      totalPages,
-      currentPage: pageNumber
+      jobs: paginated,
+      currentPage: page,
+      totalPages: Math.ceil(allJobs.length / perPage),
+      totalResults: allJobs.length
     });
   } catch (e) {
     res.status(500).json({ error: e.toString() });
   }
 });
-
 
 
 /* ===============================
