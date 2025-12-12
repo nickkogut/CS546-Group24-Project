@@ -8,9 +8,12 @@ const savedIds = { // Stores the id of everything added to the database. Used fo
     payrollJobs: []
 };
 
-
 const getDataFromJson = (filePath) => {
     return JSON.parse(fs.readFileSync(filePath).toString());
+}
+
+const sanitizeCodePoints = (text) => {
+    return text.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
 }
 
 const main = async () => {
@@ -23,7 +26,10 @@ const main = async () => {
     for (const payrollJob of payrollJobsData) {
         let _id = new ObjectId()
 
-        const { title, agency, startYear, endYear, startSalary, endSalary, employee, borough } = payrollJob;
+        let { title, agency, startYear, endYear, startSalary, endSalary, employee, borough } = payrollJob;
+        title = sanitizeCodePoints(title);
+        agency = sanitizeCodePoints(agency);
+
         const newPayrollJob = {
             title,
             agency,
@@ -56,7 +62,13 @@ const main = async () => {
     const newOpenJobs = [];
     for (const openJob of openJobsData) {
         let _id = new ObjectId();
-        const { jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url, keywords } = openJob;
+        let { jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url, keywords } = openJob;
+        agency = sanitizeCodePoints(agency);
+        title = sanitizeCodePoints(title);
+        desc = sanitizeCodePoints(desc);
+        reqs = sanitizeCodePoints(reqs);
+        skills = sanitizeCodePoints(skills);
+
         const newOpenJob = {
             // jobId,
             _id,

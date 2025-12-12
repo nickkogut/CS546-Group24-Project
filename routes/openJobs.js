@@ -8,12 +8,12 @@ const router = Router();
 const pageTitle = 'Jobs';
 
 router.get("/", async (req, res) => {
+    let isAuthenticated = false;
     try {
         const searchResponse = await filterJobs({ page: 1, numPerPage: 10 });
         const dropdownOptions = await getDropdownOptions();
 
         // If user is authenticated, include dropdown to search by tagged jobs
-        let isAuthenticated = false;
         if (req.session.user) {
             isAuthenticated = true;
         }
