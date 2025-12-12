@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { users, passwordResetTokens } from "../config/mongoCollections.js";
 import { ObjectId } from "mongodb";
-import { checkString } from "../helpers.js";
+import { checkString, applyXSS } from "../helpers.js";
 import { sendResetEmail } from "../config/email.js";
 
 const router = Router();
@@ -15,6 +15,15 @@ const redirectIfLoggedIn = (req, res, next) => {
   if (req.session.user) {
     // You can change this to "/" or "/home" or something similar
     return res.redirect("/");
+  }
+  next();
+};
+
+const requireAuth = (req, res, next) => {
+  if (!req.session.user) {
+    return res.redirect(
+      "/auth/login?error=" + encodeURIComponent("Please log in first.")
+    );
   }
   next();
 };
@@ -302,6 +311,54 @@ router.post("/reset/:token", async (req, res) => {
   }
 });
 
+
+// ---------------------------
+// POST /auth/profile  update profile
+// ---------------------------
+router.post("/profile", requireAuth, async (req, res) => {
+  try {
+    let body = applyXSS(req.body);
+
+    let { firstName, lastName, borough, age, publicProfile } = body;
+
+    firstName = checkString(firstName);
+    lastName = checkString(lastName);
+
+    if (borough && borough.trim() !== "") {
+      borough = checkString(borough);
+    } else {
+      borough = "Unknown";
+    }
+
+    let ageNum = null;
+    if (age && age.toString().trim() !== "") {
+      ageNum = parseInt(age, 10);
+      if (Number.isNaN(ageNum) || ageNum <= 0) {
+        return res.redirect("/auth/profile?error=" + encodeURIComponent("Age must be a positive integer."));
+      }
+    }
+
+    const isPublic = publicProfile === "on";
+
+    const usersCol = await users();
+    const userId = new ObjectId(req.session.user._id);
+
+    await usersCol.updateOne(
+      { _id: userId },
+      { $set: { firstName, lastName, borough, age: ageNum, public: isPublic } }
+    );
+
+    // sync session display
+    req.session.user.firstName = firstName;
+    req.session.user.lastName = lastName;
+
+    return res.redirect("/auth/profile?msg=" + encodeURIComponent("Profile updated successfully."));
+  } catch (e) {
+    return res.redirect("/auth/profile?error=" + encodeURIComponent(e.toString()));
+  }
+});
+
+
 // ---------------------------
 // GET Pages (Handlebars)
 // ---------------------------
@@ -338,5 +395,46 @@ router.get("/forgot", (req, res) => {
     msg: req.query.msg,
   });
 });
+
+// GET /auth/profile
+router.get("/profile", requireAuth, async (req, res) => {
+  try {
+    const usersCol = await users();
+
+    const user = await usersCol.findOne({
+      _id: new ObjectId(req.session.user._id),
+    });
+
+    if (!user) {
+      return res.redirect(
+        "/auth/login?error=" +
+          encodeURIComponent("User not found. Please log in again.")
+      );
+    }
+
+    return res.render("profile", {
+      title: "My Profile",
+      cssFile: "register.css", // reuse register.css
+      jsFile: "profile.js",
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        borough: user.borough,
+        age: user.age,
+        public: user.public,
+      },
+      error: req.query.error,
+      msg: req.query.msg,
+    });
+  } catch (e) {
+    return res.render("error", {
+      title: "Error",
+      statusCode: 500,
+      error: e.toString(),
+    });
+  }
+});
+
 
 export default router;
