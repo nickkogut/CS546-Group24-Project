@@ -18,7 +18,7 @@ const sanitizeCodePoints = (text) => {
 
 const main = async () => {
     // PAYROLL JOBS
-    console.log("Adding payroll jobs (may take ~10 seconds)")
+    console.log("Adding payroll jobs (may take ~5 seconds)")
     const payrollJobsCollection = await payrollJobs();
     await payrollJobsCollection.deleteMany({});
     const payrollJobsData = getDataFromJson("tasks/payroll.json");
