@@ -113,3 +113,27 @@ body {
   color: #166534;
   border: 1px solid #bbf7d0;
 }
+
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.toggle-password-icon {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  font-size: 22px;
+  user-select: none;
+  opacity: 0.8;
+}
+
+.toggle-password-icon:hover {
+  opacity: 1;
+}
