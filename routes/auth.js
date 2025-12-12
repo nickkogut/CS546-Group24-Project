@@ -144,9 +144,9 @@ router.post("/login", async (req, res) => {
 });
 
 // ---------------------------
-// POST /auth/logout
+// GET /auth/logout
 // ---------------------------
-router.post("/logout", async (req, res) => {
+router.get("/logout", async (req, res) => {
   if (!req.session.user) {
     return res.redirect(
       "/auth/login?msg=" + encodeURIComponent("You are already logged out.")
