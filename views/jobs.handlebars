@@ -27,14 +27,14 @@
 
     {{!-- Fields --}}
     <label for="agency">Agency</label>
-    <input id="agency" name="agency" type="text" autoComplete="on" list="agencyList" placeholder="Select an Agency" />
+    <input id="agency" name="agency" type="text" autoComplete="on" list="agencyList" placeholder="Select an Agency">
     <br>
     <label for="title">Job Title</label>
-    <input id="title" name="title" type="text" autoComplete="on" list="titleList" placeholder="Select a Job Title" />
+    <input id="title" name="title" type="text" autoComplete="on" list="titleList" placeholder="Select a Job Title">
     <br>
 
     <label for="keywords">Keywords</label>
-    <input id="keywords" name="keywords" type="text" placeholder="Enter Job Keywords" />
+    <input id="keywords" name="keywords" type="text" placeholder="Enter Job Keywords">
     <br>
     <label for="borough">Borough</label>
     <select id="borough" name="borough">
@@ -48,15 +48,15 @@
     <br>
 
     <label for="minDate">Posted Since</label>
-    <input id="minDate" name="minDate" type="date" />
+    <input id="minDate" name="minDate" type="date">
 
 
     <div id="salaryRangeContainer">
       <label for="salaryRangeValue">Salary Range</label>
       <input type="text" id="salaryRangeValue" readonly>
       <div id="salarySlider"></div>
-      <input type="text" name="minSalary" id="minSalary" value="0" hidden readonly></input>
-      <input type="text" name="maxSalary" id="maxSalary" value="200000" hidden readonly></input>
+      <input type="text" name="minSalary" id="minSalary" value="0" hidden readonly>
+      <input type="text" name="maxSalary" id="maxSalary" value="200000" hidden readonly>
     </div>
 
     <input id="useResume" name="useResume" type="checkbox" hidden>
@@ -64,11 +64,11 @@
     <input id="page" name="page" type="number" value="{{pageInfo.page}}" min="1" max="{{pageInfo.maxPage}}" hidden
       readonly>
     <label for="nonResidency">Open to Non-Residents</label>
-    <input id="nonResidency" name="nonResidency" type="checkbox" checked />
+    <input id="nonResidency" name="nonResidency" type="checkbox" checked>
     <br>
 
     <label for="fullTime">Full Time Only</label>
-    <input id="fullTime" name="fullTime" type="checkbox" />
+    <input id="fullTime" name="fullTime" type="checkbox">
     <br>
     <label for="numPerPage"> Results Per Page</label>
     <select id="numPerPage" name="numPerPage">
@@ -122,3 +122,4 @@
   <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
   <script src="https://code.jquery.com/ui/1.14.1/jquery-ui.js"></script>
   <script src="/public/js/openJobs.js"></script>
+</main>
