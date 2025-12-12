@@ -37,7 +37,8 @@ app.use((req, res, next) => {
       if (diff > 20 * 60 * 1000) {
         // More than 20 minutes of inactivity
         req.session.destroy(() => {
-          return res.status(440).json({ error: "Session expired. Please log in again." });
+          res.clearCookie("AuthCookie");
+          return res.redirect("/auth/login?error=" + encodeURIComponent("Session expired. Please log in again."));
         });
         return;
       }
@@ -61,7 +62,8 @@ const handlebarsInstance = exphbs.create({
       }
 
       return new Handlebars.SafeString(JSON.stringify(obj));
-    }
+    },
+    eq: (a, b) => String(a) === String(b)
   },
 });
 
