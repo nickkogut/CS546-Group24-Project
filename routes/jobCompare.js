@@ -1,4 +1,5 @@
 // routes/jobCompare.js
+import { applyXSS } from "../helpers.js";
 import { Router } from "express";
 import {
   getAllPayrollTitles,
@@ -65,6 +66,7 @@ router.get("/", async (req, res) => {
    =============================== */
 router.post("/data", async (req, res) => {
   try {
+    req.body = applyXSS(req.body);
     const { jobTitle } = req.body;
     if (!jobTitle) return res.status(400).json({ error: "Missing jobTitle" });
     const salaries = await getPayrollSalaries(jobTitle);
@@ -79,6 +81,7 @@ router.post("/data", async (req, res) => {
    =============================== */
 router.post("/transitions", async (req, res) => {
   try {
+    req.body = applyXSS(req.body);
     const { fromTitle } = req.body;
     if (!fromTitle) return res.status(400).json({ error: "fromTitle required" });
 
@@ -95,6 +98,7 @@ router.post("/transitions", async (req, res) => {
    =============================== */
 router.post("/compareJobs", async (req, res) => {
   try {
+    req.body = applyXSS(req.body);
     const { titleA, titleB, filters } = req.body;
     if (!titleA || !titleB)
       return res.status(400).json({ error: "titleA and titleB required" });
@@ -133,6 +137,7 @@ router.post("/compareJobs", async (req, res) => {
    =============================== */
 router.post("/graphData", async (req, res) => {
   try {
+    req.body = applyXSS(req.body);
     const { title, filters } = req.body;
     if (!title) return res.status(400).json({ error: "title required" });
 
@@ -151,6 +156,7 @@ router.post("/graphData", async (req, res) => {
    =============================== */
 router.post("/advancedJobs", async (req, res) => {
   try {
+    req.body = applyXSS(req.body);
     let { agency, borough, yearFrom, yearTo, minAvgSalary, minCount, page } =
       req.body;
 
@@ -195,6 +201,7 @@ router.post("/advancedJobs", async (req, res) => {
    =============================== */
 router.post("/experienceStats", async (req, res) => {
   try {
+    req.body = applyXSS(req.body);
     let { title, minYears, maxYears, filters } = req.body;
 
     if (!title) return res.status(400).json({ error: "title required" });

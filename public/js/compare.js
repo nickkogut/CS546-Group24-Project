@@ -488,10 +488,10 @@
                 <strong>${escapeHtml(t.title)}</strong>
               </label>
               &nbsp;&nbsp; Avg: ${t.avgSalary ? formatMoney(t.avgSalary) : "(n/a)"}
-              &nbsp;&nbsp; Count: ${t.count}
+              &nbsp;&nbsp; Amount of People Moved: ${t.count}
               ${
                 t.url
-                  ? `&nbsp;&nbsp;<a href="${t.url}" target="_blank">(Open Jobs)</a>`
+                  ? `&nbsp;&nbsp;<a href="${t.url}" target="_blank">(Closest Job Match)</a>`
                   : ""
               }
             `;
