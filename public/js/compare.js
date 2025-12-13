@@ -1,6 +1,7 @@
 // public/js/compare.js
 (() => {
   document.addEventListener("DOMContentLoaded", () => {
+    const autofillBtn = document.getElementById("autofillBtn");
     // Graph
     const jobSelect = document.getElementById("jobSelect");
     const salaryInput = document.getElementById("salaryInput");
@@ -42,6 +43,22 @@
     const experienceResults = document.getElementById("experienceResults");
 
     let chartInstance = null;
+
+    function blockNegative(inputEl) {
+      if (!inputEl) return;
+      inputEl.addEventListener("input", () => {
+        if (Number(inputEl.value) < 0) {
+          inputEl.value = "";
+          alert("Negative numbers are not allowed.");
+        }
+      });
+    }
+    blockNegative(document.getElementById("salaryInput"));
+    blockNegative(document.getElementById("filterMinSalary"));
+    blockNegative(document.getElementById("advMinAvg"));
+    blockNegative(document.getElementById("advMinCount"));
+    blockNegative(document.getElementById("expMinYears"));
+    blockNegative(document.getElementById("expMaxYears"));
 
     function formatMoney(n) {
       if (typeof n !== "number" || !Number.isFinite(n)) return "$0";
@@ -488,10 +505,10 @@
                 <strong>${escapeHtml(t.title)}</strong>
               </label>
               &nbsp;&nbsp; Avg: ${t.avgSalary ? formatMoney(t.avgSalary) : "(n/a)"}
-              &nbsp;&nbsp; Count: ${t.count}
+              &nbsp;&nbsp; Amount of People Moved: ${t.count}
               ${
                 t.url
-                  ? `&nbsp;&nbsp;<a href="${t.url}" target="_blank">(Open Jobs)</a>`
+                  ? `&nbsp;&nbsp;<a href="${t.url}" target="_blank">(Closest Job Match)</a>`
                   : ""
               }
             `;
@@ -644,6 +661,7 @@ async function loadAdvancedJobs(page = 1) {
       advancedJobsStatus.textContent = "No jobs matched those filters.";
       return;
     }
+    
 
     let html = "<table border='1' cellpadding='6'><tr><th>Job Title</th><th>Avg Salary</th><th>Entries</th><th>Year Range</th></tr>";
 
@@ -758,5 +776,33 @@ if (advancedJobsBtn) {
         }
       });
     }
+    if (autofillBtn) {
+  autofillBtn.addEventListener("click", async () => {
+    try {
+      const res = await fetch("/compare/autofill");
+      const json = await res.json();
+
+      if (!res.ok) {
+        alert(json.error || "Unable to autofill.");
+        return;
+      }
+    const jobSelect = document.getElementById("jobSelect");       // Graph job selector
+    const salaryInput = document.getElementById("salaryInput");   // Graph salary input
+    const fromJobInput = document.getElementById("fromJobInput"); // Transition search job
+    const expJobSelect = document.getElementById("expJobSelect"); // Experience job
+
+    if (jobSelect) jobSelect.value = json.title;
+    if (salaryInput) salaryInput.value = json.salary;
+    if (fromJobInput) fromJobInput.value = json.title;
+    if (expJobSelect) expJobSelect.value = json.title;
+    if (filterBorough) filterBorough.value = json.borough;
+    if (filterAgency)filterAgency.value = json.agency;
+
+  } catch (e) {
+    alert("Autofill failed. Are you logged in?");
+    }
+  });
+}
+
   });
 })();

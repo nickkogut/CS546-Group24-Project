@@ -1,7 +1,24 @@
 import { Router } from "express";
 import { applyXSS, checkString } from "../helpers.js";
 import { getUserById, updateUserResume, updateCurrentJob } from "../data/user.js";
-import { getDropdownOptions } from "../data/openJobs.js";
+import { payrollJobs } from "../config/mongoCollections.js";
+
+//import { getDropdownOptions } from "../data/openJobs.js";//
+
+export const getDropdownOptions = async () => {
+    // Returns all job titles and agencies availabile in the dataset.
+    // Used to populate searchable dropdowns on the search form.
+    try {
+        const openJobsCollection = await payrollJobs();
+        const response = {
+            titles: await openJobsCollection.distinct("title"),
+            agencies: await openJobsCollection.distinct("agency")
+        };
+        return response;
+    } catch (e) {
+        throw e;
+    }
+  }
 
 const router = Router();
 const pageTitle = "My Info | CareerScope NYC";
