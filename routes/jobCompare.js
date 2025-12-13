@@ -90,7 +90,8 @@ router.get("/autofill", async (req, res) => {
     return res.json({
       title: current.title || "",
       salary: current.salary || "",
-      borough: current.borough || ""
+      borough: current.borough || "",
+      agency: current.agency || ""
     });
   } catch (e) {
     return res.status(500).json({ error: e.toString() });

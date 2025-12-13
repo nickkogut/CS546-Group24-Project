@@ -255,27 +255,15 @@ export async function getAdvancedJobList(filters = {}) {
   if (filters.agency) q.agency = filters.agency;
   if (filters.borough) q.borough = filters.borough;
 
-  // YEAR FILTER LOGIC — FIXED
-  const match = [];
-  const yearFrom = filters.yearFrom ? Number(filters.yearFrom) : null;
-  const yearTo   = filters.yearTo   ? Number(filters.yearTo)   : null;
+  // YEAR FILTER LOGIC
+  //const match = [];//
+  const yearFrom = filters.yearFrom ? Number(filters.yearFrom) : 0;
+  const yearTo   = filters.yearTo   ? Number(filters.yearTo)   : 1000000;
 
-
-  if (yearFrom !== null && yearTo !== null) {
-    // Overlap logic
-    match.push({
-      $and: [
-        { startYear: { $lte: yearTo } },  
-        { endYear: { $gte: yearFrom } },  
-      ],
-    });
-  } else if (yearFrom !== null) {
-    match.push({ endYear: { $gte: yearFrom } });
-  } else if (yearTo !== null) {
-    match.push({ startYear: { $lte: yearTo } });
-  }
-
-  if (match.length > 0) q.$and = match;
+    q.$and= [
+        { startYear: { $gte: yearFrom } },  
+        { endYear: { $lte: yearTo } },  
+      ];
 
   // QUERY
   const docs = await col

@@ -661,6 +661,7 @@ async function loadAdvancedJobs(page = 1) {
       advancedJobsStatus.textContent = "No jobs matched those filters.";
       return;
     }
+    
 
     let html = "<table border='1' cellpadding='6'><tr><th>Job Title</th><th>Avg Salary</th><th>Entries</th><th>Year Range</th></tr>";
 
@@ -794,8 +795,9 @@ if (advancedJobsBtn) {
     if (salaryInput) salaryInput.value = json.salary;
     if (fromJobInput) fromJobInput.value = json.title;
     if (expJobSelect) expJobSelect.value = json.title;
+    if (filterBorough) filterBorough.value = json.borough;
+    if (filterAgency)filterAgency.value = json.agency;
 
-    alert("Profile job autofilled!");
   } catch (e) {
     alert("Autofill failed. Are you logged in?");
     }
