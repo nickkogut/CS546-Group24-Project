@@ -73,7 +73,11 @@ export const checkDate = (val) => {
     val = checkString(val);
     if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(val)) throw `Error: ${val} should be YYYY-MM-DD`;
 
-    return new Date(val.substring(5, 7) + "/" + val.substring(8, 10) + "/" + val.substring(0, 4)); // Convert to MM/DD/YYYY
+    return new Date(Date.UTC(
+        parseInt(val.substring(0, 4)),
+        parseInt(val.substring(5, 7)) - 1,
+        parseInt(val.substring(8, 10))
+    ));
 }
 
 export const clamp = (val, min, max) => {
@@ -89,17 +93,18 @@ export const applyXSS = (element) => {
         element = xss(element);
     }
     else if (Array.isArray(element)) {
-            element.map((subElement) => {
-                return applyXSS(subElement);
-            });
+        element.map((subElement) => {
+            return applyXSS(subElement);
+        });
     } else {
         Object.keys(element).forEach((key, _index) => {
-        element[key] = applyXSS(element[key]);
-    })};
+            element[key] = applyXSS(element[key]);
+        })
+    };
 
     return element;
 }
-    
+
 
 
 
