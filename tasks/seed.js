@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { users, openJobs, payrollJobs } from "../config/mongoCollections.js";
 import fs from "fs";
+import bcrypt from "bcrypt";
 
 const savedIds = { // Stores the id of everything added to the database. Used for making sample data
     users: [],
@@ -18,7 +19,7 @@ const sanitizeCodePoints = (text) => {
 
 const main = async () => {
     // PAYROLL JOBS
-    console.log("Adding payroll jobs (may take ~5 seconds)")
+    console.log("Adding payroll jobs (may take a few seconds)")
     const payrollJobsCollection = await payrollJobs();
     await payrollJobsCollection.deleteMany({});
     const payrollJobsData = getDataFromJson("tasks/payroll.json");
@@ -62,7 +63,12 @@ const main = async () => {
     const newOpenJobs = [];
     for (const openJob of openJobsData) {
         let _id = new ObjectId();
-        let { jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url, keywords } = openJob;
+        let { _jobId, agency, title, category, fullTime, experience, borough, desc, reqs, skills, residency, postingDate, salary, url, keywords } = openJob;
+        postingDate = new Date(Date.UTC(
+            parseInt(postingDate.split('/')[2]),
+            parseInt(postingDate.split('/')[0]) - 1, // month is 0 based
+            parseInt(postingDate.split('/')[1])
+        ));
         agency = sanitizeCodePoints(agency);
         title = sanitizeCodePoints(title);
         desc = sanitizeCodePoints(desc);
@@ -108,6 +114,7 @@ const main = async () => {
 
     let _id = new ObjectId();
     savedIds.users.push(_id);
+
     const user1 = {
         _id,
         "firstName": "Steve",
@@ -167,7 +174,8 @@ SKILLS
                 "endYear": 2025,
                 "startSalary": 999_000.01,
                 "endSalary": 999_999.99,
-                "borough": "Manhattan"
+                "borough": "Manhattan",
+                "currentJob": true,
             },
 
             {
@@ -178,24 +186,12 @@ SKILLS
                 "endYear": 2021,
                 "startSalary": 25_000.01,
                 "endSalary": 29_000.10,
-                "borough": "Queens"
+                "borough": "Queens",
+                "currentJob": false,
             }
         ],
 
-        "taggedJobs": [
-            {
-                "jobId": savedIds.openJobs[0],
-                "applicationStatus": "Applied",
-                "notes": "Near grandma's house, good pay.",
-                "confidence": 7,
-            },
-            {
-                "jobId": savedIds.openJobs[1],
-                "applicationStatus": "Interview Scheduled",
-                "notes": "I don't meet half the requirements but they have a free cafeteria so I'm trying.",
-                "confidence": 2,
-            }
-        ]
+        "taggedJobs": [],
     }
 
     _id = new ObjectId();
@@ -204,10 +200,11 @@ SKILLS
         _id,
         "firstName": "Joe",
         "lastName ": "Smith",
-        "email": "js@aol.com",
-        "borough": "Staten Island",
+        "email": "test@aol.com",
+        "borough": "Manhattan",
         "age": 20,
-        "resume": `PROFESSIONAL SUMMARY Results-oriented Digital Marketing Specialist with 6+ years of experience driving brand awareness and revenue growth. Expert in SEO/SEM, content strategy, and social media management. Proven track record of increasing organic traffic by 40% YoY and managing ad budgets exceeding $50k/month. Adept at using analytics to optimize campaigns and improve ROI.
+        "resume": `
+PROFESSIONAL SUMMARY Results-oriented Digital Marketing Specialist with 6+ years of experience driving brand awareness and revenue growth. Expert in SEO/SEM, content strategy, and social media management. Proven track record of increasing organic traffic by 40% YoY and managing ad budgets exceeding $50k/month. Adept at using analytics to optimize campaigns and improve ROI.
 
 PROFESSIONAL EXPERIENCE
 
@@ -238,28 +235,111 @@ CORE SKILLS
     Soft Skills: Project Management, Cross-functional Collaboration, Data Analysis
 
 EDUCATION Bachelor of Science in Marketing | Stevens Institute of Technology | Hoboken, NJ`,
-        "hashedPassword": "$s8da09s7d0as7d0a98sd0iV5HOskfVn7.PWncS$90$1",
-        "public": false,
+        "hashedPassword": await bcrypt.hash("Password123!", 10),
+        "public": true,
         "heldJobs ": [
             {
                 "_id": new ObjectId(),
                 "title": "Assistant Janitor",
                 "agency": "Department of Education",
                 "startYear ": 2023,
-                "endYear": 2024,
+                "endYear": 2025,
                 "startSalary": 20_000,
                 "endSalary": 22_000,
-                "borough": "Staten Island"
+                "borough": "Manhattan",
+                "currentJob": true,
+            },
+            {
+                "_id": new ObjectId(),
+                "title": "Junior Janitor Intern",
+                "agency": "Department of Education",
+                "startYear ": 2022,
+                "endYear": 2023,
+                "startSalary": 10_000,
+                "endSalary": 12_000,
+                "borough": "Manhattan",
+                "currentJob": false,
             }
         ],
 
-        "taggedJobs": []
-    }
+        "taggedJobs": [
+            {
+                "jobId": savedIds.openJobs[0],
+                "applicationStatus": "Applied",
+                "notes": "Near grandma's house, good pay.",
+                "confidence": 7,
+            },
+            {
+                "jobId": savedIds.openJobs[1],
+                "applicationStatus": "Interview Scheduled",
+                "notes": "I don't meet half the requirements but they have a free cafeteria so I'm trying.",
+                "confidence": 2,
+            },
+            {
+                "jobId": savedIds.openJobs[2],
+                "applicationStatus": "Applied",
+                "notes": "I really want this one but I'm not so sure I'll get it",
+                "confidence": 4,
+            },
+        ]
+    };
+
+    _id = new ObjectId();
+    savedIds.users.push(_id);
+    const user3 = {
+        _id,
+        "firstName": "Carlos",
+        "lastName ": "Jones",
+        "email": "cjones@yahoo.com",
+        "borough": "Brooklyn",
+        "age": 23,
+        "resume": "",
+        "hashedPassword": "$2a$08$XdvNKelNIL8F8xsuIUeSbNOFgK0M0iV5HOskfVn7.PWncShU.O",
+        "public": true,
+        "heldJobs ": [
+            {
+                "_id": new ObjectId(),
+                "title": "Senior Web Developer",
+                "agency": "Department of Labor",
+                "startYear ": 2019,
+                "endYear": 2025,
+                "startSalary": 120_000,
+                "endSalary": 128_000,
+                "borough": "Brooklyn",
+                "currentJob": true,
+            },
+            {
+                "_id": new ObjectId(),
+                "title": "NPM Specialist",
+                "agency": "Department of Education",
+                "startYear ": 2016,
+                "endYear": 2019,
+                "startSalary": 100_000,
+                "endSalary": 105_000,
+                "borough": "Manhattan",
+                "currentJob": false,
+            },
+            {
+                "_id": new ObjectId(),
+                "title": "Volunteer Policeman",
+                "agency": "Police Department",
+                "startYear ": 2015,
+                "endYear": 2024,
+                "startSalary": 10_000,
+                "endSalary": 12_000,
+                "borough": "Staten Island",
+                "currentJob": false,
+            }
+        ],
+
+        "taggedJobs": [],
+    };
 
 
 
     usersToAdd.push(user1);
     usersToAdd.push(user2);
+    usersToAdd.push(user3);
     try {
         let insertInfo = await usersCollection.insertMany(usersToAdd);
         if (!insertInfo) throw "Error: failed to add user";
