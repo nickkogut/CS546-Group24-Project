@@ -80,7 +80,7 @@ const generateListingHtml = (jobListing, jobTagData) => {
     }
 
     let date = new Date(jobListing.postingDate);
-    let dateString = `${date.getMonth()}/${date.getDate()}/${date.getFullYear()}`;
+    let dateString = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`; // months are 0 indexed
 
     listingHtml += `
     <p><a href="${jobListing.url}">${jobListing.title}</a><span class="salary">$${jobListing.salary}</span></p>
@@ -103,7 +103,7 @@ const generateListingHtml = (jobListing, jobTagData) => {
             <td>${jobListing.residency}</td>
         <tr>
         <tr>
-            <td>Posting Date: </td>
+            <td>Posting/Update Date: </td>
             <td>${dateString}</td>
         <tr>
         `;
@@ -176,7 +176,7 @@ const addHtmlToJobDiv = async (isAuthenticated, responseMessage) => {
         $("#jobListings").empty();
         const errors = [];
 
-        const minDate = $("#minDate").val();
+        let minDate = $("#minDate").val();
         if (minDate !== "") {
             const today = new Date();
             const formattedDate = minDate.substring(5, 7) + "/" + minDate.substring(8, 10) + "/" + minDate.substring(0, 4);
