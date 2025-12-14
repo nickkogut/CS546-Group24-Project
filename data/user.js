@@ -24,7 +24,7 @@ export const createUser = async ({
   lastName = checkString(lastName);
   email = checkString(email);
   borough = checkString(borough);
-  if (typeof age !== "number" || age <= 0) throw "Error: invalid age";
+  if (typeof age !== "number" || age < 16 || age >= 100) throw "Error: invalid age";
   if (!hashedPassword) throw "Error: hashedPassword is required";
 
   // resume should be allowed to be empty at account creation

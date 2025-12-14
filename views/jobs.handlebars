@@ -2,10 +2,15 @@
 <main>
   <h1>Open Jobs</h1>
   <div id="pageDesc">
-    <p>Browse the open job postings that best meet your criteria! <a href="/auth/login">Login</a> and upload a resume
+    <p>Browse the open job postings that best meet your criteria!{{#if isAuthenticated}} Click
+      <span style="font-style:italic">"Search with My Resume"</span> to have jobs sorted based on relevance to your
+      skills. Make sure your resume has lots of
+      keywords to get the most accurate results.{{else}} <a href="/auth/login">Login</a>
+      and upload a resume
       for
       more
-      personalized resume-based suggestions, or to save jobs for later</p>
+      personalized resume-based suggestions, or to save jobs for later.{{/if}}
+    </p>
   </div>
   <br>
 

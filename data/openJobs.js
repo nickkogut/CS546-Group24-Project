@@ -59,14 +59,11 @@ export const filterJobs = async (jobOpts) => {
     jobOpts.page = valOrDefault(jobOpts.page, 1, checkNumber);
     jobOpts.page = clamp(jobOpts.page, 1, 10e4);
 
-    // TODO: if the user is passed here it must be authenticated previously as the current user 
     jobOpts.userId = valOrDefault(jobOpts.userId, "", checkId);
     jobOpts.jobTag = valOrDefault(jobOpts.jobTag, "", checkString);
 
     // Force jobTag to match one of these or be blank
     if (!["applied", "rejected", "interview scheduled", "offer received", ""].includes(jobOpts.jobTag.toLowerCase())) throw `Error: jobTag ${jobOpts.jobTag} is invalid`;
-
-
 
     const matchParams = {
         $match: {
@@ -164,9 +161,4 @@ export const getDropdownOptions = async () => {
     } catch (e) {
         throw e;
     }
-
-
-
 }
-
-
