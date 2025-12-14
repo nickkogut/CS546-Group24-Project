@@ -1,4 +1,4 @@
-<main class="my-info-main">
+<main class="myInfo">
   <h1>My Info</h1>
 
   {{#if resumeError}}
@@ -22,7 +22,7 @@
     {{/if}}!
   </p>
 
-  <section id="resume-section">
+  <section id="resumeSection">
     <h3 id="resumeHeading">
       {{#if hasResume}}
         Your resume
@@ -60,13 +60,14 @@
       </div>
 
       <div class="field">
-        <label for="jobSalary">Salary (annual, $)</label>
+        <label for="jobSalary">Salary (Max $50M | Nearest $1000)</label>
         <input
           id="jobSalary"
           name="salary"
           type="number"
           min="0"
           step="1000"
+          required
           value="{{jobSalaryValue}}"
         >
       </div>
@@ -100,12 +101,14 @@
       </div>
     </form>
 
-    <h3>Job history</h3>
+    <h3>Job history (Sorted Alphabetically)</h3>
     {{#if hasJobs}}
       {{#each heldJobs}}
         <div class="job-card">
-          <strong>{{title}}</strong>
-          {{#if currentJob}} <span>(Current)</span>{{/if}}
+          <div>
+            <strong>{{title}}</strong>
+            {{#if currentJob}} <span>(Current)</span>{{/if}}
+          </div>
 
           {{#if salary}}
             <div>Salary: {{formatMoney salary}}</div>
@@ -114,7 +117,14 @@
           {{#if startDate}}
             <div>Start: {{formatDate startDate}}</div>
           {{/if}}
-          {{#if borough}}<div>Borough: {{borough}}</div>{{/if}}
+
+          {{#if borough}}
+            <div>Borough: {{borough}}</div>
+          {{/if}}
+
+          <form method="post" action="/account/jobs/{{_id}}/delete">
+            <button type="submit" class="btn secondary">Delete</button>
+          </form>
         </div>
       {{/each}}
     {{else}}

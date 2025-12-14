@@ -1,24 +1,22 @@
 import { Router } from "express";
 import { applyXSS, checkString } from "../helpers.js";
-import { getUserById, updateUserResume, updateCurrentJob, addJobHistory } from "../data/user.js";
+import { getUserById, updateUserResume, updateCurrentJob, addJobHistory, deleteJobHistory } from "../data/user.js";
 import { payrollJobs } from "../config/mongoCollections.js";
 
 //import { getDropdownOptions } from "../data/openJobs.js";//
 
 export const getDropdownOptions = async () => {
-    // Returns all job titles and agencies availabile in the dataset.
-    // Used to populate searchable dropdowns on the search form.
-    try {
-        const openJobsCollection = await payrollJobs();
-        const response = {
-            titles: await openJobsCollection.distinct("title"),
-            agencies: await openJobsCollection.distinct("agency")
-        };
-        return response;
-    } catch (e) {
-        throw e;
-    }
+  try {
+    const openJobsCollection = await payrollJobs();
+    const response = {
+      titles: await openJobsCollection.distinct("title"),
+      agencies: await openJobsCollection.distinct("agency")
+    };
+    return response;
+  } catch (e) {
+    throw e;
   }
+};
 
 const router = Router();
 const pageTitle = "My Info";
@@ -50,6 +48,10 @@ async function buildAccountViewModel(userId, extras = {}) {
   heldJobs.sort((a, b) => (b.currentJob - a.currentJob));
 
   const jobBoroughValue = extras.jobBoroughValue || "";
+  let hasJobs = false;
+  if (heldJobs.length > 0) {
+    hasJobs = true;
+  }
   return {
     title: pageTitle,
     cssFile: "myinfo.css",
@@ -67,28 +69,22 @@ async function buildAccountViewModel(userId, extras = {}) {
       public: user.public
     },
 
-    // Add-job form values (for re-render on error)
     jobTitleValue: extras.jobTitleValue || "",
     jobSalaryValue: extras.jobSalaryValue || "",
     jobStartDateValue: extras.jobStartDateValue || "",
+
     jobBoroughValue,
     jobBoroughIsManhattan: jobBoroughValue === "Manhattan",
     jobBoroughIsBrooklyn: jobBoroughValue === "Brooklyn",
     jobBoroughIsQueens: jobBoroughValue === "Queens",
     jobBoroughIsBronx: jobBoroughValue === "Bronx",
-    jobIsCurrent: !!extras.jobIsCurrent,
-
-    // Suggestions
+    jobIsCurrent: extras.jobIsCurrent,
     jobTitles: dropdownOptions.titles,
-
-    // Job history list
     heldJobs,
-    hasJobs: heldJobs.length > 0,
+    hasJobs,
 
-    resumeError: null,
-    jobError: null,
-
-    ...extras
+    resumeError: extras.resumeError || null,
+    jobError: extras.jobError || null,
   };
 }
 
@@ -128,7 +124,6 @@ router.post("/resume", async (req, res) => {
   }
 });
 
-// NEW: add job to history
 router.post("/jobs", async (req, res) => {
   if (!req.session.user) return res.redirect("/auth/login");
 
@@ -162,6 +157,22 @@ router.post("/jobs", async (req, res) => {
       jobStartDateValue: startDate || "",
       jobBoroughValue: borough || "",
       jobIsCurrent: !!currentJob
+    });
+    return res.status(400).render("account", viewModel);
+  }
+});
+
+router.post("/jobs/:heldJobId/delete", async (req, res) => {
+  if (!req.session.user) return res.redirect("/auth/login");
+
+  const { heldJobId } = req.params;
+
+  try {
+    await deleteJobHistory(req.session.user._id, heldJobId);
+    return res.redirect("/account");
+  } catch (e) {
+    const viewModel = await buildAccountViewModel(req.session.user._id, {
+      jobError: e.toString()
     });
     return res.status(400).render("account", viewModel);
   }

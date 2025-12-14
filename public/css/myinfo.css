@@ -1,22 +1,14 @@
-.my-info-main {
+.myInfo {
   max-width: 800px;
   margin: 2rem auto;
   padding: 0 1.5rem;
 }
 
-.my-info-main h1 {
+.myInfo h1 {
   margin-bottom: 1rem;
 }
 
-/* #resume-section {
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: #f7fbff;
-  border-radius: 6px;
-  border: 1px solid #c2d9f0;
-} */
-
-#resume-section h3 {
+#resumeSection h3 {
   margin-top: 0;
   margin-bottom: 0.75rem;
 }
@@ -59,7 +51,14 @@
   background: #006ca0;
 }
 
-#keywordsResult {
+/*i didnt like how these two turned out, default looked cleaner lol */
+/* #keywordsResult {
   margin-top: 0.75rem;
   font-size: 0.9rem;
-}
+} */
+
+/* #resumeSection {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f7fbff;
+} */
