@@ -2,34 +2,34 @@
   <h1>My Info</h1>
 
   {{#if resumeError}}
-    <p class="error" id="resumeError">{{resumeError}}</p>
+  <p class="error" id="resumeError">{{resumeError}}</p>
   {{else}}
-    <p class="error" id="resumeError"></p>
+  <p class="error" id="resumeError"></p>
   {{/if}}
 
   {{#if jobError}}
-    <p class="error" id="jobError">{{jobError}}</p>
+  <p class="error" id="jobError">{{jobError}}</p>
   {{else}}
-    <p class="error" id="jobError"></p>
+  <p class="error" id="jobError"></p>
   {{/if}}
 
   <p>
     Welcome,
     {{#if currentUser}}
-      {{currentUser.firstName}} {{currentUser.lastName}}
+    {{currentUser.firstName}} {{currentUser.lastName}}
     {{else}}
-      user
+    user
     {{/if}}!
   </p>
 
   <section id="resume-section">
-    <h3 id="resumeHeading">
+    <h2 id="resumeHeading">
       {{#if hasResume}}
-        Your resume
+      Your resume
       {{else}}
-        Paste your resume
+      Paste your resume
       {{/if}}
-    </h3>
+    </h2>
 
     <form id="resume-form" method="post" action="/account/resume">
       <textarea id="resumeText" name="resumeText" rows="10">{{resumeText}}</textarea>
@@ -43,7 +43,7 @@
   </section>
 
   <section id="job-history-section">
-    <h3>Add job</h3>
+    <h2>Add job</h2>
 
     <form id="add-job-form" method="post" action="/account/jobs">
       <div class="field">
@@ -52,23 +52,16 @@
         <select id="jobTitle" name="jobTitle" required>
           <option value="">Select a job title</option>
           {{#if jobTitles}}
-            {{#each jobTitles}}
-              <option value="{{this}}">{{this}}</option>
-            {{/each}}
+          {{#each jobTitles}}
+          <option value="{{this}}">{{this}}</option>
+          {{/each}}
           {{/if}}
         </select>
       </div>
 
       <div class="field">
         <label for="jobSalary">Salary (annual, $)</label>
-        <input
-          id="jobSalary"
-          name="salary"
-          type="number"
-          min="0"
-          step="1000"
-          value="{{jobSalaryValue}}"
-        >
+        <input id="jobSalary" name="salary" type="number" min="0" step="1000" value="{{jobSalaryValue}}">
       </div>
 
       <div class="field">
@@ -100,25 +93,25 @@
       </div>
     </form>
 
-    <h3>Job history</h3>
+    <h2>Job history</h2>
     {{#if hasJobs}}
-      {{#each heldJobs}}
-        <div class="job-card">
-          <strong>{{title}}</strong>
-          {{#if currentJob}} <span>(Current)</span>{{/if}}
+    {{#each heldJobs}}
+    <div class="job-card">
+      <strong>{{title}}</strong>
+      {{#if currentJob}} <span>(Current)</span>{{/if}}
 
-          {{#if salary}}
-            <div>Salary: {{formatMoney salary}}</div>
-          {{/if}}
+      {{#if salary}}
+      <div>Salary: {{formatMoney salary}}</div>
+      {{/if}}
 
-          {{#if startDate}}
-            <div>Start: {{formatDate startDate}}</div>
-          {{/if}}
-          {{#if borough}}<div>Borough: {{borough}}</div>{{/if}}
-        </div>
-      {{/each}}
+      {{#if startDate}}
+      <div>Start: {{formatDate startDate}}</div>
+      {{/if}}
+      {{#if borough}}<div>Borough: {{borough}}</div>{{/if}}
+    </div>
+    {{/each}}
     {{else}}
-      <p>No jobs added yet.</p>
+    <p>No jobs added yet.</p>
     {{/if}}
   </section>
 
