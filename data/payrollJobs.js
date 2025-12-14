@@ -1,5 +1,5 @@
 // data/payrollJobs.js
-import { payrollJobs } from "../config/mongoCollections.js";
+import { payrollJobs, openJobs } from "../config/mongoCollections.js";
 
 async function _getCollection() {
   return await payrollJobs();
@@ -14,6 +14,70 @@ function salaryFromDoc(doc) {
   if (Number.isFinite(s2)) return s2;
   return null;
 }
+
+// ===== Helpers for matching payroll titles to openJobs titles =====
+function normalizeTitle(str) {
+  return String(str)
+    .toLowerCase()
+    .replace(/[-–\/]/g, " ")
+    .replace(/\b(level|per|session|temporary|temp|provisional|assoc|assistant|l\d+)\b/g, "")
+    .replace(/[^\w\s]/g, "")
+    .trim();
+}
+
+function extractKeywords(str) {
+  return normalizeTitle(str)
+    .split(/\s+/)
+    .filter((w) => w.length > 4);
+}
+
+function keywordOverlap(payrollTitle, openTitle) {
+  const a = extractKeywords(payrollTitle);
+  const b = extractKeywords(openTitle);
+  let overlap = 0;
+  for (const w of a) {
+    if (b.includes(w)) overlap++;
+  }
+  return overlap;
+}
+
+// Find best-matching open job for a given payroll title
+async function findMatchingOpenJobDoc(title) {
+  if (!title) return null;
+  const col = await openJobs();
+
+  // Get all open job titles + urls once
+  const docs = await col
+    .find({})
+    .project({ title: 1, url: 1 })
+    .toArray();
+
+  let best = null;
+  let bestScore = 0;
+
+  for (const d of docs) {
+    if (!d.title) continue;
+
+    const openTitle = String(d.title);
+
+    // Strong: direct substring hit
+    if (openTitle.toLowerCase().includes(title.toLowerCase())) {
+      if (d.url) return d; // immediate win
+    }
+
+    // Fallback: keyword overlap
+    const score = keywordOverlap(title, openTitle);
+    if (score > bestScore) {
+      bestScore = score;
+      best = d;
+    }
+  }
+
+  // Only accept if there's at least 1 overlapping keyword
+  if (best && bestScore > 0 && best.url) return best;
+  return null;
+}
+
 
 // list unique job titles
 export async function getAllPayrollTitles() {
@@ -80,18 +144,32 @@ export async function getCareerTransitions(fromTitle, limit = 5) {
       stats[t].countSal++;
     }
   }
+  const titles = Object.keys(stats);
 
-  const arr = Object.keys(stats).map((t) => {
+  // Build base array first
+  const baseArr = titles.map((t) => {
     const s = stats[t];
     return {
       title: t,
       count: s.count,
       avgSalary: s.countSal ? s.total / s.countSal : null,
+      url: null,
     };
   });
 
-  arr.sort((a, b) => b.count - a.count);
-  return arr.slice(0, limit);
+  // Sort by how common the transition is (same as before)
+  baseArr.sort((a, b) => b.count - a.count);
+  const top = baseArr.slice(0, limit);
+
+  // Attach URLs from openJobs using keyword-overlap matching
+  for (const item of top) {
+    const match = await findMatchingOpenJobDoc(item.title);
+    if (match && match.url) {
+      item.url = match.url;
+    }
+  }
+
+  return top;
 }
 
 // stats for side-by-side compare
@@ -129,7 +207,7 @@ export async function getJobStats(title, filters = {}) {
 
   return {
     title,
-    count: n,
+    count: filters.transitionCount ?? n,
     avg: sum / n,
     min: sals[0],
     max: sals[n - 1],
@@ -173,16 +251,21 @@ export async function getAdvancedJobList(filters = {}) {
   const col = await _getCollection();
   const q = {};
 
+  // BASIC FILTERS
   if (filters.agency) q.agency = filters.agency;
   if (filters.borough) q.borough = filters.borough;
 
-  if (typeof filters.yearFrom === "number") {
-    q.endYear = Object.assign({}, q.endYear, { $gte: filters.yearFrom });
-  }
-  if (typeof filters.yearTo === "number") {
-    q.startYear = Object.assign({}, q.startYear, { $lte: filters.yearTo });
-  }
+  // YEAR FILTER LOGIC
+  //const match = [];//
+  const yearFrom = filters.yearFrom ? Number(filters.yearFrom) : 0;
+  const yearTo   = filters.yearTo   ? Number(filters.yearTo)   : 1000000;
 
+    q.$and= [
+        { startYear: { $gte: yearFrom } },  
+        { endYear: { $lte: yearTo } },  
+      ];
+
+  // QUERY
   const docs = await col
     .find(q)
     .project({
@@ -194,18 +277,19 @@ export async function getAdvancedJobList(filters = {}) {
     })
     .toArray();
 
+  // STATS
   const stats = {};
 
   for (const d of docs) {
-    const t = (d.title || "").trim();
-    if (!t) continue;
+    const title = (d.title || "").trim();
+    if (!title) continue;
 
     const sal = salaryFromDoc(d);
     const sy = Number(d.startYear);
     const ey = Number(d.endYear);
 
-    if (!stats[t]) {
-      stats[t] = {
+    if (!stats[title]) {
+      stats[title] = {
         total: 0,
         countSal: 0,
         count: 0,
@@ -214,16 +298,19 @@ export async function getAdvancedJobList(filters = {}) {
       };
     }
 
-    const s = stats[t];
-    s.count++;
-    if (sal !== null && Number.isFinite(sal)) {
-      s.total += sal;
-      s.countSal++;
+    const st = stats[title];
+    st.count++;
+
+    if (Number.isFinite(sal)) {
+      st.total += sal;
+      st.countSal++;
     }
-    if (Number.isFinite(sy)) s.minYear = Math.min(s.minYear, sy);
-    if (Number.isFinite(ey)) s.maxYear = Math.max(s.maxYear, ey);
+
+    if (Number.isFinite(sy)) st.minYear = Math.min(st.minYear, sy);
+    if (Number.isFinite(ey)) st.maxYear = Math.max(st.maxYear, ey);
   }
 
+  // ARRAY
   let arr = Object.keys(stats).map((t) => {
     const s = stats[t];
     return {
@@ -235,18 +322,24 @@ export async function getAdvancedJobList(filters = {}) {
     };
   });
 
+  // MIN AVG FILTER
   if (typeof filters.minAvgSalary === "number") {
     arr = arr.filter(
       (j) => j.avgSalary !== null && j.avgSalary >= filters.minAvgSalary
     );
   }
+
+  // MIN COUNT FILTER
   if (typeof filters.minCount === "number") {
     arr = arr.filter((j) => j.count >= filters.minCount);
   }
 
+  // SORT
   arr.sort((a, b) => (b.avgSalary || 0) - (a.avgSalary || 0));
+
   return arr;
 }
+
 
 export async function getExperienceStats(title, minYears, maxYears, filters = {}) {
   if (!title) throw "Missing title";

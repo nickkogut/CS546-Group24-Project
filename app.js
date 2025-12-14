@@ -37,9 +37,8 @@ app.use((req, res, next) => {
       const diff = now - req.session.lastActivity;
       if (diff > 20 * 60 * 1000) {
         req.session.destroy(() => {
-          return res
-            .status(440)
-            .json({ error: "Session expired. Please log in again." });
+          res.clearCookie("AuthCookie");
+          return res.redirect("/auth/login?error=" + encodeURIComponent("Session expired. Please log in again."));
         });
         return;
       }
@@ -61,7 +60,8 @@ const handlebarsInstance = exphbs.create({
       return new Handlebars.SafeString(JSON.stringify(obj));
     },
     formatMoney,
-    formatDate
+    formatDate,
+    eq: (a, b) => String(a) === String(b)
   }
 });
 

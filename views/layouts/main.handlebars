@@ -4,6 +4,8 @@
     <meta charset="utf-8">
     <title>{{title}}</title>
     <link rel="stylesheet" href="/public/css/styles.css">
+    {{!-- Material Icons --}}
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     {{#if cssFile}}
       <link rel="stylesheet" href="/css/{{cssFile}}" />
     {{/if}}
@@ -42,6 +44,7 @@
 
     <div class="account-dropdown">
       {{#if isAuthenticated}}
+      <a href="/auth/profile">Profile</a>
       <a href="/auth/logout">Logout</a>
       {{else}}  
       <a href="/auth/login">Login</a>

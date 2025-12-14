@@ -1,22 +1,93 @@
-<main class="my-info-main">
-  {{#if notFound}}
-    <h1>Profile not found</h1>
-  {{else}}
-    <h1>{{profileUser.firstName}} {{profileUser.lastName}}</h1>
+<div class="page register-page">
+  <div class="card">
 
-    <h3>Job history</h3>
-    {{#if hasJobs}}
-      {{#each heldJobs}}
-        <div class="job-card">
-          <strong>{{title}}</strong>
-          {{#if currentJob}} <span>(Current)</span>{{/if}}
-          {{#if salary}}<div>Salary: {{salary}}</div>{{/if}}
-          {{#if startDate}}<div>Start: {{startDate}}</div>{{/if}}
-          {{#if borough}}<div>Borough: {{borough}}</div>{{/if}}
-        </div>
-      {{/each}}
-    {{else}}
-      <p>No job history available.</p>
+    <h1 class="title">My Profile</h1>
+    <p class="subtitle">Update your information.</p>
+
+    {{#if error}}
+      <div class="message error">{{error}}</div>
     {{/if}}
-  {{/if}}
-</main>
+
+    {{#if msg}}
+      <div class="message success">{{msg}}</div>
+    {{/if}}
+
+    <div id="client-error" class="message error" style="display:none;"></div>
+
+    <form id="profile-form" method="POST" action="/auth/profile">
+      <div class="field">
+        <label>First Name</label>
+        <div class="wrapper">
+          <input type="text" name="firstName" value="{{user.firstName}}" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Last Name</label>
+        <div class="wrapper">
+          <input type="text" name="lastName" value="{{user.lastName}}" required />
+        </div>
+      </div>
+
+      {{!-- disable：Email --}}
+      <div class="field">
+        <label>Email (cannot be changed)</label>
+        <div class="wrapper">
+          <input type="email" value="{{user.email}}" disabled />
+        </div>
+      </div>
+
+      {{!-- disable：Password --}}
+      <div class="field">
+        <label>Password</label>
+        <div class="wrapper">
+          <input type="password" value="********" disabled />
+        </div>
+        <p class="field-hint">
+          To change your password, use <a href="/auth/forgot">Forgot password</a>.
+        </p>
+      </div>
+
+      <div class="field">
+        <label>Borough</label>
+        <div class="wrapper">
+            <select name="borough" class="input-like">
+            <option value="" {{#if (eq user.borough "")}}selected{{/if}}>Select a borough (optional)</option>
+            <option value="Manhattan" {{#if (eq user.borough "Manhattan")}}selected{{/if}}>Manhattan</option>
+            <option value="Brooklyn" {{#if (eq user.borough "Brooklyn")}}selected{{/if}}>Brooklyn</option>
+            <option value="Queens" {{#if (eq user.borough "Queens")}}selected{{/if}}>Queens</option>
+            <option value="Bronx" {{#if (eq user.borough "Bronx")}}selected{{/if}}>Bronx</option>
+            <option value="Staten Island" {{#if (eq user.borough "Staten Island")}}selected{{/if}}>Staten Island</option>
+            <option value="Other" {{#if (eq user.borough "Other")}}selected{{/if}}>Other</option>
+            </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Age</label>
+        <div class="wrapper">
+          <input type="number" name="age" min="1" value="{{user.age}}" />
+        </div>
+      </div>
+
+      <div class="field checkbox-field">
+        <label class="checkbox-label">
+          <input type="checkbox" name="publicProfile" {{#if user.public}}checked{{/if}} />
+          Make my profile public
+        </label>
+        <p class="field-hint">
+          If public, other users can see your job history and tagged jobs.
+        </p>
+      </div>
+
+      <button type="submit" class="btn-primary">Save changes</button>
+    </form>
+
+    <div class="links">
+      <a href="/">Back to home</a>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/profile.js"></script>

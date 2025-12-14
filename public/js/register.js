@@ -16,6 +16,24 @@
     errorDiv.style.display = "none";
   }
 
+  // Material Icon password toggle
+  (function () {
+    const toggle = document.getElementById("toggle-password");
+    const input = document.getElementById("password");
+
+    if (!toggle || !input) return;
+
+    toggle.addEventListener("click", () => {
+      const isHidden = input.type === "password";
+
+      input.type = isHidden ? "text" : "password";
+
+      // Switch Material icon
+      toggle.textContent = isHidden ? "visibility_off" : "visibility";
+    });
+  })();
+
+
   function isValidEmail(email) {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(email);

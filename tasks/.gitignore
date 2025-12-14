@@ -1,2 +1,2 @@
-payroll.json
-postings.json
+*.json
+*/seed_data

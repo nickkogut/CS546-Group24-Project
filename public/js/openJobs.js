@@ -1,35 +1,4 @@
-const jobTagForm = `
-<form class="selectJobForm">
-<label>
-    Select a Job Tag
-    <select class="tag" name="tag">
-    <option value="">Tag this job</option>
-    <option value="Applied">Applied</option>
-    <option value="Rejected">Rejected</option>
-    <option value="Interview Scheduled">Interview Scheduled</option>
-    <option value="Offer Received">Offer Received</option>
-    <option value="Remove Tag">Remove Tag</option>
-    </select>
-</label>
-
-<div class="subForm" hidden>
-    <label>
-    Notes
-    <textarea class="notes" name="notes" placeholder="Notes"></textarea>
-    </label>
-    <label>
-    Confidence (1-10)
-    <input class="confidence" type="number" min="1" max="10" value="5">
-    </label>
-    <button class="submitTag" name="submitTag">Submit</button>
-    <button class="removeTag" name="removeTag">Remove Tag</button>
-</div>
-</form>
-<div class="tagError" hidden>
-<ul class="tagErrorList">
-
-</ul>
-</div>`; // Inserted into each job listing when viewed by an authenticated user
+// const jobTagForm =  // Inserted into each job listing when viewed by an authenticated user
 
 
 const updateSliderDisplay = (min, max) => {
@@ -67,16 +36,147 @@ $(function () {
 
 updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val()));
 
+const generateListingHtml = (jobListing, jobTagData) => {
+    // jobTagData is optional, only used if authed
+    // generates html for one job listing
+    let listingHtml = `
+    <div class="listing" id="${jobListing._id}">`
+    if (jobTagData) {
+        // authed
+        listingHtml += `
+        <form class="selectJobForm">
+        <label>
+            Tag this job
+            <select class="tag" name="tag">
+            <option value="">Tag this job</option>
+            <option value="Applied" ${jobTagData.applicationStatus === "Applied" ? "selected" : ""}>Applied</option>
+            <option value="Rejected" ${jobTagData.applicationStatus === "Rejected" ? "selected" : ""}>Rejected</option>
+            <option value="Interview Scheduled" ${jobTagData.applicationStatus === "Interview Scheduled" ? "selected" : ""}>Interview Scheduled</option>
+            <option value="Offer Received" ${jobTagData.applicationStatus === "Offer Received" ? "selected" : ""}>Offer Received</option>
+            <option value="Remove Tag" >Remove Tag</option>
+            </select>
+        </label>
+
+        <div class="subForm" hidden>
+            <label>
+            Notes
+            <textarea class="notes" name="notes" placeholder="Notes">${jobTagData.notes}</textarea>
+            </label>
+            <label>
+            Confidence (1-10)
+            <input class="confidence" type="number" min="1" max="10" value="${jobTagData.confidence}">
+            </label>
+            <button class="submitTag" name="submitTag">Submit</button>
+            <button class="removeTag" name="removeTag">Remove Tag</button>
+        </div>
+        </form>
+        <div class="tagError" hidden>
+        <ul class="tagErrorList">
+
+        </ul>
+        </div>`;
+
+
+    }
+
+    let date = new Date(jobListing.postingDate);
+    let dateString = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`; // months are 0 indexed
+
+    listingHtml += `
+    <p><a href="${jobListing.url}">${jobListing.title}</a><span class="salary">$${jobListing.salary}</span></p>
+    <p>${jobListing.agency}</p>
+    <input type="checkbox" class="expandJob" id="expandJob${jobListing._id}"/>
+    <label class="showMoreLabel" for="expandJob${jobListing._id}">Show More</label>
+
+    <div class="listingSubMenu">
+    <table class="moreListingAttributes">
+        <tr>
+            <td>Borough: </td>
+            <td>${jobListing.borough}</td>
+        <tr>
+        <tr>
+            <td>Full time possible: </td>
+            <td>${jobListing.fullTime}</td>
+        <tr>
+        <tr>
+            <td>Residency required: </td>
+            <td>${jobListing.residency}</td>
+        <tr>
+        <tr>
+            <td>Posting/Update Date: </td>
+            <td>${dateString}</td>
+        <tr>
+        `;
+
+    // text attributes that don't exist in every listing
+    let textAttrs = { "reqs": "Requirements", "skills": "Skills", "desc": "Description" };
+    Object.entries(textAttrs).forEach((attr) => {
+        if (jobListing[attr[0]].trim() !== "") {
+            listingHtml +=
+                `
+        <tr>
+            <td>${attr[1]} </td>
+            <td>${jobListing[attr[0]].trim()}</td>
+        <tr>
+
+        `;
+        }
+
+
+    })
+    listingHtml +=
+        `
+        </table>
+        </div>
+    </div>
+    `
+    return listingHtml;
+
+}
+
+const addHtmlToJobDiv = async (isAuthenticated, responseMessage) => {
+    // Takes jobs received from post request
+    // adds HTML to the job div for all of them
+    const jobDiv = $("#jobListings");
+    if (isAuthenticated) {
+        // get info for all tagged jobs if applicable
+        let jobIds = [];
+        responseMessage.jobs.forEach((job) => {
+            jobIds.push(job._id);
+        });
+
+        let tagRequest = {
+            method: 'POST',
+            url: '/user/getTaggedJobs',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                jobIds
+            })
+        };
+
+        const tagResponse = await $.ajax(tagRequest);
+        // silent failure is fine
+        responseMessage.jobs.forEach((job) => {
+            jobDiv.append($(generateListingHtml(job, tagResponse[job._id])));
+        });
+
+    } else {
+        responseMessage.jobs.forEach((job) => {
+            jobDiv.append($(generateListingHtml(job)));
+        });
+    }
+}
+
 (function ($) {
     // form submission
-    $("#openJobSearch").submit(function (event) {
+    $("#openJobSearch").submit(async function (event) {
         event.preventDefault();
         $("#error").hide();
         $("#errorList").empty();
         $("#jobListings").empty();
         const errors = [];
 
-        const minDate = $("#minDate").val();
+        let minDate = $("#minDate").val();
         if (minDate !== "") {
             const today = new Date();
             const formattedDate = minDate.substring(5, 7) + "/" + minDate.substring(8, 10) + "/" + minDate.substring(0, 4);
@@ -162,58 +262,36 @@ updateSliderDisplay(Number($("#minSalary").val()), Number($("#maxSalary").val())
                 })
             };
 
-            $.ajax(requestConfig).then(function (responseMessage) {
-                const jobDiv = $("#jobListings");
-                let pageInfo;
-                // console.log(responseMessage);
+            const responseMessage = await $.ajax(requestConfig);
+            const jobDiv = $("#jobListings");
+            let pageInfo;
 
-                if (responseMessage.redirect) {
-                    window.location.replace(responseMessage.redirect);
-                    return;
+            if (responseMessage.redirect) {
+                window.location.replace(responseMessage.redirect);
+                return;
+            }
+
+            if (responseMessage.error) {
+                $("#error").show();
+                $("#errorList").append(responseMessage.error);
+                pageInfo = {
+                    page: 0,
+                    minPage: 1,
+                    maxPage: 0,
+                    numResults: 0
                 }
+            } else {
+                await addHtmlToJobDiv(isAuthenticated, responseMessage);
+                pageInfo = responseMessage.pageInfo;
+                pageInfo.minPage = 1;
+            }
 
-                if (responseMessage.error) {
-                    $("#error").show();
-                    $("#errorList").append(responseMessage.error);
-                    pageInfo = {
-                        page: 0,
-                        minPage: 1,
-                        maxPage: 0,
-                        numResults: 0
-                    }
-                } else {
-
-
-                    responseMessage.jobs.map((jobListing) => {
-
-                        let element;
-                        if (isAuthenticated) {
-                            element = $(
-                                `<div class="listing" id=${jobListing._id}>
-                            <p>${jobListing.title}</p> ${jobTagForm}
-                            </div>`);
-
-                        } else {
-                            element = $(
-                                `<div class="listing">
-                            <p>${jobListing.title}</p>
-                            </div>`);
-                        }
-
-                        // TODO: add rest of info for job in each listing. It should match handlebars
-                        jobDiv.append(element);
-                    });
-                    pageInfo = responseMessage.pageInfo;
-                    pageInfo.minPage = 1;
-                }
-
-                $("#page").val(pageInfo.page);
-                $("#page").attr({
-                    "min": pageInfo.minPage,
-                    "max": pageInfo.maxPage
-                });
-                $("#pageText").text(`Page ${pageInfo.page}/${pageInfo.maxPage} Total: ${pageInfo.numResults} Jobs`);
+            $("#page").val(pageInfo.page);
+            $("#page").attr({
+                "min": pageInfo.minPage,
+                "max": pageInfo.maxPage
             });
+            $("#pageText").text(`Page ${pageInfo.page}/${pageInfo.maxPage} Total: ${pageInfo.numResults} Jobs`);
         }
     });
 })(window.jQuery);
@@ -284,7 +362,7 @@ $(document).on('click', '.removeTag', function (event) {
     $(this).closest('.selectJobForm').submit();
 });
 
-$(document).on("submit", ".selectJobForm", function (event) {
+$(document).on("submit", ".selectJobForm", async function (event) {
     event.preventDefault();
     const errDiv = $(this).siblings(".tagError");
     const errList = errDiv.find(".tagErrorList");
@@ -326,15 +404,25 @@ $(document).on("submit", ".selectJobForm", function (event) {
             })
         };
 
-        $.ajax(requestConfig).then(function (responseMessage) {
-            if (responseMessage.error) {
-                errDiv.show();
-                errList.append(responseMessage.error);
-            } else {
-                subForm.hide();
-                $(this).val("");
-            }
-        });
+        let responseMessage = await $.ajax(requestConfig);
+        if (responseMessage.error) {
+            errDiv.show();
+            errList.append(responseMessage.error);
+        } else {
+            subForm.hide();
+            $(this).val("");
+        }
+    }
+});
+
+
+$(document).on('change', '.expandJob', function () {
+    const label = $(`label[for="${this.id}"]`);
+
+    if (this.checked) {
+        label.text("Show Less");
+    } else {
+        label.text("Show More");
     }
 });
 

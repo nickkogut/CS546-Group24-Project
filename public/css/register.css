@@ -47,6 +47,15 @@ body {
 }
 
 .field input {
+  padding: 8px 10px;
+  font-size: 0.95rem;
+  border-radius: 9px;
+  border: 1px solid #d1d5db;
+  outline: none;
+  background: #f9fafb;
+}
+
+.field select {
   width: 100%;
   padding: 8px 10px;
   font-size: 0.95rem;
@@ -110,4 +119,28 @@ body {
   background: #ecfdf3;
   color: #166534;
   border: 1px solid #bbf7d0;
+}
+
+.wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.toggle-password-icon {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  font-size: 22px;
+  user-select: none;
+  opacity: 0.8;
+}
+
+.toggle-password-icon:hover {
+  opacity: 1;
 }

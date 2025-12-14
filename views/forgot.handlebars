@@ -14,7 +14,9 @@
     <form method="POST" action="/auth/forgot">
       <div class="field">
         <label>Email</label>
-        <input type="email" name="email" required />
+        <div class="wrapper">
+          <input type="email" name="email" required />
+        </div>
       </div>
 
       <button type="submit" class="btn-primary">Send reset link</button>
