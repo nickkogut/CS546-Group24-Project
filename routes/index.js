@@ -13,11 +13,9 @@ import accountRoutes from "./account.js";
 
 const constructorMethod = (app) => {
 
-  // login / register / forgot password do not require login
   app.use(vars);
   app.use("/auth", authRoutes);
 
-  // The following routes require login
   // app.use("/users", requireAuth, usersRoutes);
   // app.use("/openJobs", requireAuth, openJobsRoutes);
   // app.use("/payroll", requireAuth, payrollRoutes);
@@ -25,7 +23,7 @@ const constructorMethod = (app) => {
 
   app.get('/', async (req, res) => {
     const publicUsers = await getPublicUsers(8);
-    res.render('home', { title: 'Home | CareerScope NYC', publicUsers });
+    res.render('home', { title: 'Home', publicUsers });
   });
 
   app.use('/jobs', openJobsRoutes);

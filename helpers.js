@@ -105,6 +105,42 @@ export const applyXSS = (element) => {
     return element;
 }
 
+export const formatMoney = (money) => {
+    if(money === null || money === undefined){
+        return "";
+    }
+    let n = Number(money);
+    if(n>50000000){
+        return "";
+    }
+    return new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD',minimumFractionDigits: 0, maximumFractionDigits: 0}).format(n);
+}
+
+export const formatDate = (val) => {
+  if (!val) return "";
+
+  if (val instanceof Date && !Number.isNaN(val.getTime())) {
+    return `${val.getMonth() + 1}/${val.getDate()}/${val.getFullYear()}`;
+  }
+
+  if (typeof val === "string") {
+    const m = val.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) {
+      const y = Number(m[1]);
+      const mo = Number(m[2]);
+      const d = Number(m[3]);
+      return `${mo}/${d}/${y}`;
+    }
+
+    const parsed = new Date(val);
+    if (!Number.isNaN(parsed.getTime())) {
+      return `${parsed.getMonth() + 1}/${parsed.getDate()}/${parsed.getFullYear()}`;
+    }
+  }
+
+  return "";
+};
+    
 
 
 

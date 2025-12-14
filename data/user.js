@@ -8,6 +8,8 @@ const _idToObjectId = (id) => {
   return new ObjectId(id);
 };
 
+const VALID_BOROUGHS = ["", "Manhattan", "Brooklyn", "Queens", "Bronx"];
+
 export const createUser = async ({
   firstName,
   lastName,
@@ -25,6 +27,10 @@ export const createUser = async ({
   if (typeof age !== "number" || age <= 0) throw "Error: invalid age";
   if (!hashedPassword) throw "Error: hashedPassword is required";
 
+  // resume should be allowed to be empty at account creation
+  resume = typeof resume === "string" ? resume : "";
+  resume = resume.trim();
+
   const userDoc = {
     firstName,
     lastName,
@@ -32,7 +38,7 @@ export const createUser = async ({
     borough,
     age,
     public: !!publicProfile,
-    resume: checkString(resume),
+    resume,
     hashedPassword,
     heldJobs: [],
     taggedJobs: []
@@ -77,6 +83,71 @@ export const updateUserProfile = async (id, updates) => {
   return updateInfo.value;
 };
 
+/**
+ * NEW: Add a job to job history (heldJobs)
+ * Supports: title, salary (optional), startDate (optional), borough (optional), currentJob (checkbox)
+ * Enforces: only ONE job can be marked currentJob=true
+ */
+export const addJobHistory = async (userId, jobData) => {
+  const _id = _idToObjectId(userId);
+  const users = await usersCollection();
+
+  const title = checkString(jobData.title, "job title").trim();
+  if (title.length === 0) throw "Error: job title is required";
+  if (title.length > 100) throw "Error: job title is too long";
+
+  let salary = null;
+  if (jobData.salary !== undefined && jobData.salary !== null && String(jobData.salary).trim() !== "") {
+    const n = Number(jobData.salary);
+    if (!Number.isFinite(n) || n < 0) throw "Error: salary must be a non-negative number";
+    salary = n;
+  }
+
+  let startDate = null;
+  if (jobData.startDate && String(jobData.startDate).trim() !== "") {
+    const d = new Date(jobData.startDate);
+    if (isNaN(d.getTime())) throw "Error: invalid start date";
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (d > today) throw "Error: start date cannot be in the future";
+    startDate = d;
+  }
+
+  let borough = "";
+  if (jobData.borough && String(jobData.borough).trim() !== "") {
+    borough = checkString(jobData.borough, "borough");
+  }
+  if (!VALID_BOROUGHS.includes(borough)) throw "Error: invalid borough";
+
+  const currentJob = !!jobData.currentJob;
+
+  // If this is marked current, clear currentJob from all other jobs first
+  if (currentJob) {
+    await users.updateOne(
+      { _id },
+      { $set: { "heldJobs.$[].currentJob": false } }
+    );
+  }
+
+  const job = {
+    _id: new ObjectId(),
+    title,
+    salary,
+    startDate,
+    borough,
+    currentJob
+  };
+
+  const updateInfo = await users.updateOne(
+    { _id },
+    { $push: { heldJobs: job } }
+  );
+
+  if (!updateInfo) throw "Error: could not add job";
+  return job;
+};
+
+// (kept as-is in case other parts of your app still call it)
 export const addHeldJob = async (userId, jobData) => {
   const _id = _idToObjectId(userId);
   const users = await usersCollection();
@@ -142,15 +213,13 @@ export const removeTaggedJob = async (userId, jobId) => {
   const users = await usersCollection();
 
   const removalInfo = await users.updateOne(
-    { _id: _id },
-    { $pull: { taggedJobs: { jobId: jobId } } },
-
+    { _id },
+    { $pull: { taggedJobs: { jobId } } }
   );
 
   if (!removalInfo) throw "Error: failed to remove job status";
   return removalInfo;
-
-}
+};
 
 export const updateUserResume = async (id, resumeText) => {
   const _id = _idToObjectId(id);
@@ -166,12 +235,11 @@ export const updateUserResume = async (id, resumeText) => {
     { returnDocument: "after" }
   );
 
-  if (!updateInfo) {
-    throw "Error: could not update resume";
-  }
+  if (!updateInfo) throw "Error: could not update resume";
   return updateInfo;
 };
 
+// kept, but your account page no longer needs it once you switch to heldJobs
 export const updateCurrentJob = async (userId, jobData) => {
   const _id = _idToObjectId(userId);
   const users = await usersCollection();
@@ -198,7 +266,6 @@ export const updateCurrentJob = async (userId, jobData) => {
 };
 
 export const getPublicUsers = async (numResults) => {
-  // Returns up to numResults users with public profiles
   const usersCol = await usersCollection();
   const users = await usersCol.find({
     public: true

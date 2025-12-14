@@ -1,7 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // ===== RESUME =====
   const resumeForm = document.getElementById("resume-form");
   const resumeTextarea = document.getElementById("resumeText");
   const resumeError = document.getElementById("resumeError");
+  const resumeHeading = document.getElementById("resumeHeading");
+
   const saveResumeBtn = document.getElementById("saveResumeBtn");
   const editResumeBtn = document.getElementById("editResumeBtn");
   const clearResumeBtn = document.getElementById("clearResumeBtn");
@@ -14,12 +17,13 @@ document.addEventListener("DOMContentLoaded", () => {
       saveResumeBtn.hidden = true;
       clearResumeBtn.hidden = true;
       editResumeBtn.hidden = false;
+      if (resumeHeading) resumeHeading.textContent = "Your resume";
     } else {
-      // edit mode
       resumeTextarea.readOnly = false;
       saveResumeBtn.hidden = false;
       clearResumeBtn.hidden = false;
       editResumeBtn.hidden = true;
+      if (resumeHeading) resumeHeading.textContent = "Paste your resume";
       resumeTextarea.focus();
     }
   };
@@ -37,13 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const text = resumeTextarea.value.trim();
       const errors = [];
 
-      if (!text) {
-        errors.push("Resume cannot be empty or just spaces.");
-      }
-
-      if (text.length > 10000) {
-        errors.push("Resume is too long (max 10,000 characters).");
-      }
+      if (!text) errors.push("Resume cannot be empty or just spaces.");
+      if (text.length > 10000) errors.push("Resume is too long (max 10,000 characters).");
 
       if (errors.length > 0) {
         event.preventDefault();
@@ -68,89 +67,49 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const jobForm = document.getElementById("current-job-form");
+  // ===== ADD JOB =====
+  const jobForm = document.getElementById("add-job-form");
   const jobError = document.getElementById("jobError");
-  const jobTitleInput = document.getElementById("currentJobTitle");
-  const jobSalaryInput = document.getElementById("currentJobSalary");
-  const jobStartDateInput = document.getElementById("currentJobStartDate");
-  const jobBoroughSelect = document.getElementById("currentJobBorough");
 
-  const saveJobBtn = document.getElementById("saveJobBtn");
-  const editJobBtn = document.getElementById("editJobBtn");
-  const clearJobBtn = document.getElementById("clearJobBtn");
+  const jobTitle = document.getElementById("jobTitle");
+  const jobSalary = document.getElementById("jobSalary");
+  const jobStartDate = document.getElementById("jobStartDate");
+  const jobBorough = document.getElementById("jobBorough");
+  const clearAddJobBtn = document.getElementById("clearAddJobBtn");
 
-  const setJobMode = (mode) => {
-    if (
-      !jobTitleInput ||
-      !jobSalaryInput ||
-      !jobStartDateInput ||
-      !jobBoroughSelect ||
-      !saveJobBtn ||
-      !editJobBtn ||
-      !clearJobBtn
-    ) {
-      return;
-    }
+  const VALID_BOROUGHS = ["", "Manhattan", "Brooklyn", "Queens", "Bronx"];
 
-    const readonly = mode === "view";
-
-    jobTitleInput.readOnly = readonly;
-    jobSalaryInput.readOnly = readonly;
-    jobStartDateInput.readOnly = readonly;
-    jobBoroughSelect.disabled = readonly;
-
-    if (readonly) {
-      saveJobBtn.hidden = true;
-      clearJobBtn.hidden = true;
-      editJobBtn.hidden = false;
-    } else {
-      saveJobBtn.hidden = false;
-      clearJobBtn.hidden = false;
-      editJobBtn.hidden = true;
-      jobTitleInput.focus();
-    }
-  };
-
-  if (jobTitleInput) {
-    const hasJob = jobTitleInput.value.trim().length > 0;
-    setJobMode(hasJob ? "view" : "edit");
-  }
-
-  if (jobForm && jobError && jobTitleInput && jobSalaryInput && jobStartDateInput) {
+  if (jobForm && jobError && jobTitle && jobSalary && jobStartDate && jobBorough) {
     jobForm.addEventListener("submit", (event) => {
       jobError.textContent = "";
       jobError.style.display = "none";
 
-      const title = jobTitleInput.value.trim();
-      const salaryStr = jobSalaryInput.value.trim();
-      const startDateStr = jobStartDateInput.value.trim();
+      const title = jobTitle.value.trim();
+      const salaryStr = jobSalary.value.trim();
+      const startDateStr = jobStartDate.value.trim();
+      const borough = jobBorough.value;
+
       const errors = [];
 
-      if (!title) {
-        errors.push("Job title is required.");
-      } else if (title.length > 100) {
-        errors.push("Job title is too long (max 100 characters).");
-      }
+      if (!title) errors.push("Job title is required.");
+      else if (title.length > 100) errors.push("Job title is too long (max 100 characters).");
 
       if (salaryStr) {
-        const salary = Number(salaryStr);
-        if (!Number.isFinite(salary) || salary < 0) {
-          errors.push("Salary must be a non-negative number.");
-        }
+        const n = Number(salaryStr);
+        if (!Number.isFinite(n) || n < 0) errors.push("Salary must be a non-negative number.");
       }
 
       if (startDateStr) {
         const d = new Date(startDateStr);
-        if (isNaN(d.getTime())) {
-          errors.push("Start date is invalid.");
-        } else {
+        if (isNaN(d.getTime())) errors.push("Start date is invalid.");
+        else {
           const today = new Date();
           today.setHours(0, 0, 0, 0);
-          if (d > today) {
-            errors.push("Start date cannot be in the future.");
-          }
+          if (d > today) errors.push("Start date cannot be in the future.");
         }
       }
+
+      if (!VALID_BOROUGHS.includes(borough)) errors.push("Invalid borough selection.");
 
       if (errors.length > 0) {
         event.preventDefault();
@@ -160,21 +119,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (editJobBtn) {
-    editJobBtn.addEventListener("click", (event) => {
+  if (clearAddJobBtn && jobTitle && jobSalary && jobStartDate && jobBorough) {
+    clearAddJobBtn.addEventListener("click", (event) => {
       event.preventDefault();
-      setJobMode("edit");
-    });
-  }
-
-  if (clearJobBtn && jobTitleInput && jobSalaryInput && jobStartDateInput && jobBoroughSelect) {
-    clearJobBtn.addEventListener("click", (event) => {
-      event.preventDefault();
-      jobTitleInput.value = "";
-      jobSalaryInput.value = "";
-      jobStartDateInput.value = "";
-      jobBoroughSelect.value = "";
-      jobTitleInput.focus();
+      jobTitle.value = "";
+      jobSalary.value = "";
+      jobStartDate.value = "";
+      jobBorough.value = "";
+      jobTitle.focus();
     });
   }
 });
