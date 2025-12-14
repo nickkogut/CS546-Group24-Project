@@ -254,5 +254,41 @@ router.post("/experienceStats", async (req, res) => {
     res.status(500).json({ error: e.toString() });
   }
 });
+// ===============================================
+// Graph the user's job history
+// ===============================================
+router.get("/myJobsGraph", async (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "You must be logged in." });
+  }
+
+  try {
+    const user = await getUserById(req.session.user._id);
+    const jobs = (user.heldJobs || [])
+      .filter(j => j.title && j.salary != null)
+      .slice(0, 5);
+
+
+    if (jobs.length === 0) {
+      return res.json({ jobs: [] });
+    }
+
+    const out = [];
+    for (const job of jobs) {
+      const salaries = await getAllSalariesForJob(job.title, {});
+      out.push({
+        title: job.title,
+        salary: job.salary || null,
+        salaries
+      });
+    }
+
+    res.json({ jobs: out });
+
+  } catch (err) {
+    res.status(500).json({ error: err.toString() });
+  }
+});
+
 
 export default router;
