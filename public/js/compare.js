@@ -85,49 +85,102 @@ function renderGraphForCanvas(canvas, salaries, userSalary, type) {
   }
 
   if (type === "boxplot") {
-    const data = cleaned.slice().sort((a, b) => a - b);
-    if (userSalary != null) data.push(userSalary);
-
-    data.sort((a, b) => a - b);
-    const n = data.length;
-
-    const stats = [
-      data[0],
-      data[Math.floor((n - 1) * 0.25)],
-      data[Math.floor((n - 1) * 0.5)],
-      data[Math.floor((n - 1) * 0.75)],
-      data[n - 1]
-    ];
-
-    new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: ["Min", "Q1", "Median", "Q3", "Max"],
-        datasets: [{
-          label: "Salary Distribution",
-          data: stats
-        }]
-      },
-      options: { responsive: true }
-    });
-    return;
+  const data = cleaned.slice();
+  if (typeof userSalary === "number" && Number.isFinite(userSalary)) {
+    data.push(userSalary);
   }
 
-  // dot plot
+  data.sort((a, b) => a - b);
+  const n = data.length;
+
+  const stats = [
+    data[0],
+    data[Math.floor((n - 1) * 0.25)],
+    data[Math.floor((n - 1) * 0.5)],
+    data[Math.floor((n - 1) * 0.75)],
+    data[n - 1]
+  ];
+
   new Chart(ctx, {
-    type: "scatter",
+    type: "bar",
     data: {
-      datasets: [{
-        data: cleaned.map(s => ({ x: s, y: Math.random() }))
-      }]
+      labels: ["Min", "Q1", "Median", "Q3", "Max"],
+      datasets: [
+        {
+          label: "Salary Distribution",
+          data: stats,
+          backgroundColor: "rgba(0,0,0,0.7)"
+        },
+        ...(typeof userSalary === "number" && Number.isFinite(userSalary)
+          ? [{
+              label: "Your Salary",
+              data: [null, null, userSalary, null, null],
+              backgroundColor: "rgba(255,0,0,0.8)",
+              borderColor: "red",
+              borderWidth: 2
+            }]
+          : [])
+      ]
     },
     options: {
+      responsive: true,
+      plugins: { legend: { display: true } },
+      scales: { y: { beginAtZero: false } }
+    }
+  });
+  return;
+}
+
+
+  // dot plot
+  if (type === "dotplot") {
+  // spread points vertically so they don't overlap
+  const dots = cleaned.map(s => ({
+    x: s,
+    y: 0.4 + Math.random() * 0.2   // jitter between 0.4–0.6
+  }));
+
+  const datasets = [{
+    label: "Salaries",
+    data: dots,
+    pointRadius: 4,
+    backgroundColor: "rgba(0,0,0,0.7)"
+  }];
+
+  if (typeof userSalary === "number" && Number.isFinite(userSalary)) {
+    datasets.push({
+      label: "Your Salary",
+      data: [{
+        x: userSalary,
+        y: 0.4 + Math.random() * 0.4
+      }],
+      pointRadius: 7,
+      backgroundColor: "rgba(255,0,0,0.9)",
+      borderColor: "red",
+      borderWidth: 2
+    });
+  }
+
+  new Chart(ctx, {
+    type: "scatter",
+    data: { datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: true } },
       scales: {
         x: { title: { display: true, text: "Salary" } },
-        y: { display: false }
+        y: {
+          display: false,
+          min: 0,
+          max: 1
+        }
       }
     }
   });
+  return;
+}
+
+
 }
 
 
