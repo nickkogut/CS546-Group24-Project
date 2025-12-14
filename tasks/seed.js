@@ -245,10 +245,10 @@ EDUCATION Bachelor of Science in Marketing | Stevens Institute of Technology | H
             },
             {
                 "_id": new ObjectId(),
-                "title": "Junior Janitor Intern",
-                "agency": "Department of Education",
+                "title": "Child Protective Specialist",
+                "agency": "Admin For Children's Svcs",
                 "startDate": new Date(2022, 6, 1),
-                "salary": 10_000,
+                "salary": 50_000,
                 "borough": "Manhattan",
                 "currentJob": false,
             }
