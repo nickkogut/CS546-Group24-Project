@@ -335,12 +335,14 @@ $("#resetSearch").click((event) => {
 
 $("#submitSearchWithResume").click((event) => {
     event.preventDefault();
+    $("#page").val(1);
     $("#useResume").prop("checked", true);
     $("#openJobSearch").submit();
 });
 
 $("#submitSearch").click((event) => {
     event.preventDefault();
+    $("#page").val(1);
     $("#useResume").prop("checked", false);
     $("#openJobSearch").submit();
 });

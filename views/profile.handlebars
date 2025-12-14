@@ -5,69 +5,76 @@
     <p class="subtitle">Update your information.</p>
 
     {{#if error}}
-      <div class="message error">{{error}}</div>
+    <div class="message error">{{error}}</div>
     {{/if}}
 
     {{#if msg}}
-      <div class="message success">{{msg}}</div>
+    <div class="message success">{{msg}}</div>
     {{/if}}
 
     <div id="client-error" class="message error" style="display:none;"></div>
 
     <form id="profile-form" method="POST" action="/auth/profile">
       <div class="field">
-        <label>First Name</label>
-        <div class="wrapper">
-          <input type="text" name="firstName" value="{{user.firstName}}" required />
-        </div>
+        <label>First Name
+          <div class="wrapper">
+            <input type="text" name="firstName" value="{{user.firstName}}" required />
+          </div>
+        </label>
       </div>
 
       <div class="field">
-        <label>Last Name</label>
-        <div class="wrapper">
-          <input type="text" name="lastName" value="{{user.lastName}}" required />
-        </div>
+        <label>Last Name
+          <div class="wrapper">
+            <input type="text" name="lastName" value="{{user.lastName}}" required />
+          </div>
+        </label>
       </div>
 
       {{!-- disable：Email --}}
       <div class="field">
-        <label>Email (cannot be changed)</label>
-        <div class="wrapper">
-          <input type="email" value="{{user.email}}" disabled />
-        </div>
+        <label>Email (cannot be changed)
+          <div class="wrapper">
+            <input type="email" value="{{user.email}}" disabled />
+          </div>
+        </label>
       </div>
 
       {{!-- disable：Password --}}
       <div class="field">
-        <label>Password</label>
-        <div class="wrapper">
-          <input type="password" value="********" disabled />
-        </div>
+        <label>Password
+          <div class="wrapper">
+            <input type="password" value="********" disabled />
+          </div>
+        </label>
         <p class="field-hint">
           To change your password, use <a href="/auth/forgot">Forgot password</a>.
         </p>
       </div>
 
       <div class="field">
-        <label>Borough</label>
-        <div class="wrapper">
+        <label>Borough
+          <div class="wrapper">
             <select name="borough" class="input-like">
-            <option value="" {{#if (eq user.borough "")}}selected{{/if}}>Select a borough (optional)</option>
-            <option value="Manhattan" {{#if (eq user.borough "Manhattan")}}selected{{/if}}>Manhattan</option>
-            <option value="Brooklyn" {{#if (eq user.borough "Brooklyn")}}selected{{/if}}>Brooklyn</option>
-            <option value="Queens" {{#if (eq user.borough "Queens")}}selected{{/if}}>Queens</option>
-            <option value="Bronx" {{#if (eq user.borough "Bronx")}}selected{{/if}}>Bronx</option>
-            <option value="Staten Island" {{#if (eq user.borough "Staten Island")}}selected{{/if}}>Staten Island</option>
-            <option value="Other" {{#if (eq user.borough "Other")}}selected{{/if}}>Other</option>
+              <option value="" {{#if (eq user.borough "" )}}selected{{/if}}>Select a borough (optional)</option>
+              <option value="Manhattan" {{#if (eq user.borough "Manhattan" )}}selected{{/if}}>Manhattan</option>
+              <option value="Brooklyn" {{#if (eq user.borough "Brooklyn" )}}selected{{/if}}>Brooklyn</option>
+              <option value="Queens" {{#if (eq user.borough "Queens" )}}selected{{/if}}>Queens</option>
+              <option value="Bronx" {{#if (eq user.borough "Bronx" )}}selected{{/if}}>Bronx</option>
+              <option value="Staten Island" {{#if (eq user.borough "Staten Island" )}}selected{{/if}}>Staten Island
+              </option>
+              <option value="Other" {{#if (eq user.borough "Other" )}}selected{{/if}}>Other</option>
             </select>
-        </div>
+          </div>
+        </label>
       </div>
 
       <div class="field">
-        <label>Age</label>
-        <div class="wrapper">
-          <input type="number" name="age" min="1" value="{{user.age}}" />
-        </div>
+        <label>Age
+          <div class="wrapper">
+            <input type="number" name="age" min="1" value="{{user.age}}" />
+          </div>
+        </label>
       </div>
 
       <div class="field checkbox-field">

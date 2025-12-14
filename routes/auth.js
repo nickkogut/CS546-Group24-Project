@@ -46,7 +46,18 @@ router.post("/register", async (req, res) => {
     firstName = checkString(firstName);
     lastName = checkString(lastName);
     email = checkString(email).toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.redirect(
+      "/auth/register?error=" +
+      encodeURIComponent("Invalid email.")
+    );
+
+
     password = checkString(password);
+
+    if (password.length < 8 || !/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/.test(password)) return res.redirect(
+      "/auth/register?error=" +
+      encodeURIComponent("Password must be at least 8 characters and contain upper and lower case letters and a number.")
+    );
 
     // borough optional
     if (borough && borough.trim() !== "") {
@@ -58,10 +69,10 @@ router.post("/register", async (req, res) => {
     let ageNum = null;
     if (age && age.trim() !== "") {
       ageNum = parseInt(age);
-      if (Number.isNaN(ageNum) || ageNum <= 0) {
+      if (Number.isNaN(ageNum) || ageNum < 16 || ageNum >= 100) { // Adjusted bounds - Nick
         return res.redirect(
           "/auth/register?error=" +
-            encodeURIComponent("Age must be a positive integer.")
+          encodeURIComponent("Age must be a positive integer. You must be at least 16 years old and younger than 100.")
         );
       }
     }
@@ -72,7 +83,7 @@ router.post("/register", async (req, res) => {
     if (existing) {
       return res.redirect(
         "/auth/register?error=" +
-          encodeURIComponent("Email is already registered.")
+        encodeURIComponent("Email is already registered.")
       );
     }
 
@@ -101,7 +112,7 @@ router.post("/register", async (req, res) => {
     // Registration successful → redirect to login page
     return res.redirect(
       "/auth/login?msg=" +
-        encodeURIComponent("Account created successfully. Please log in.")
+      encodeURIComponent("Account created successfully. Please log in.")
     );
   } catch (e) {
     return res.redirect(
@@ -124,7 +135,7 @@ router.post("/login", async (req, res) => {
     if (!user) {
       return res.redirect(
         "/auth/login?error=" +
-          encodeURIComponent("Invalid email or password.")
+        encodeURIComponent("Invalid email or password.")
       );
     }
 
@@ -132,7 +143,7 @@ router.post("/login", async (req, res) => {
     if (!match) {
       return res.redirect(
         "/auth/login?error=" +
-          encodeURIComponent("Invalid email or password.")
+        encodeURIComponent("Invalid email or password.")
       );
     }
 
@@ -183,9 +194,9 @@ router.post("/forgot", async (req, res) => {
       // Do not reveal whether the account exists
       return res.redirect(
         "/auth/forgot?msg=" +
-          encodeURIComponent(
-            "If this email is registered, a reset link has been sent."
-          )
+        encodeURIComponent(
+          "If this email is registered, a reset link has been sent."
+        )
       );
     }
 
@@ -207,9 +218,9 @@ router.post("/forgot", async (req, res) => {
 
     return res.redirect(
       "/auth/forgot?msg=" +
-        encodeURIComponent(
-          "If this email is registered, a reset link has been sent."
-        )
+      encodeURIComponent(
+        "If this email is registered, a reset link has been sent."
+      )
     );
   } catch (e) {
     return res.redirect(
@@ -269,9 +280,9 @@ router.post("/reset/:token", async (req, res) => {
     if (!record || record.used || record.expiresAt < new Date()) {
       return res.redirect(
         "/auth/reset/" +
-          token +
-          "?error=" +
-          encodeURIComponent("This reset link is invalid or has expired.")
+        token +
+        "?error=" +
+        encodeURIComponent("This reset link is invalid or has expired.")
       );
     }
 
@@ -282,9 +293,9 @@ router.post("/reset/:token", async (req, res) => {
     if (!user) {
       return res.redirect(
         "/auth/reset/" +
-          token +
-          "?error=" +
-          encodeURIComponent("User not found.")
+        token +
+        "?error=" +
+        encodeURIComponent("User not found.")
       );
     }
 
@@ -301,12 +312,12 @@ router.post("/reset/:token", async (req, res) => {
 
     return res.redirect(
       "/auth/login?msg=" +
-        encodeURIComponent("Password reset successful. Please log in.")
+      encodeURIComponent("Password reset successful. Please log in.")
     );
   } catch (e) {
     return res.redirect(
       `/auth/reset/${req.params.token}?error=` +
-        encodeURIComponent(e.toString())
+      encodeURIComponent(e.toString())
     );
   }
 });
@@ -408,7 +419,7 @@ router.get("/profile", requireAuth, async (req, res) => {
     if (!user) {
       return res.redirect(
         "/auth/login?error=" +
-          encodeURIComponent("User not found. Please log in again.")
+        encodeURIComponent("User not found. Please log in again.")
       );
     }
 
