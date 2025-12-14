@@ -24,7 +24,7 @@ export const createUser = async ({
   lastName = checkString(lastName);
   email = checkString(email);
   borough = checkString(borough);
-  if (typeof age !== "number" || age <= 0) throw "Error: invalid age";
+  if (typeof age !== "number" || age < 16 || age >= 100) throw "Error: invalid age";
   if (!hashedPassword) throw "Error: hashedPassword is required";
 
   // resume should be allowed to be empty at account creation
@@ -156,8 +156,9 @@ export const addHeldJob = async (userId, jobData) => {
     _id: new ObjectId(),
     title: checkString(jobData.title),
     agency: checkString(jobData.agency),
-    startYear: jobData.startYear,
-    endYear: jobData.endYear,
+    // startYear: jobData.startYear,
+    // endYear: jobData.endYear,
+    startYear: jobData.startDate,
     startSalary: jobData.startSalary,
     endSalary: jobData.endSalary,
     borough: checkString(jobData.borough),

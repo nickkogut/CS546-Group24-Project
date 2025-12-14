@@ -77,9 +77,9 @@
 
     if (ageStr) {
       const age = Number(ageStr);
-      if (!Number.isInteger(age) || age <= 0) {
+      if (!Number.isInteger(age) || age < 16 || age >= 100) {
         e.preventDefault();
-        showError("Age must be a positive integer.");
+        showError("Age must be a positive integer between 16 and 100.");
         return;
       }
     }
