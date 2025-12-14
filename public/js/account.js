@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ===== RESUME =====
   const resumeForm = document.getElementById("resume-form");
   const resumeTextarea = document.getElementById("resumeText");
   const resumeError = document.getElementById("resumeError");
@@ -29,8 +28,15 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   if (resumeTextarea) {
-    const hasResume = resumeTextarea.value.trim().length > 0;
-    setResumeMode(hasResume ? "view" : "edit");
+    let hasResume = false;
+    if(resumeTextarea.value.trim().length > 0){
+      hasResume = true;
+    }
+    if(hasResume){
+      setResumeMode("view");
+    }else{
+      setResumeMode("edit");
+    }
   }
 
   if (resumeForm && resumeTextarea && resumeError) {
@@ -67,17 +73,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ===== ADD JOB =====
+  //logic for actually creating a job
   const jobForm = document.getElementById("add-job-form");
   const jobError = document.getElementById("jobError");
-
   const jobTitle = document.getElementById("jobTitle");
   const jobSalary = document.getElementById("jobSalary");
   const jobStartDate = document.getElementById("jobStartDate");
   const jobBorough = document.getElementById("jobBorough");
   const clearAddJobBtn = document.getElementById("clearAddJobBtn");
 
-  const VALID_BOROUGHS = ["", "Manhattan", "Brooklyn", "Queens", "Bronx"];
+  //no staten island 
+  const boroughs = ["", "Manhattan", "Brooklyn", "Queens", "Bronx"];
 
   if (jobForm && jobError && jobTitle && jobSalary && jobStartDate && jobBorough) {
     jobForm.addEventListener("submit", (event) => {
@@ -94,9 +100,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!title) errors.push("Job title is required.");
       else if (title.length > 100) errors.push("Job title is too long (max 100 characters).");
 
-      if (salaryStr) {
+      if (!salaryStr) {
+        errors.push("Salary is required.");
+      } else {
         const n = Number(salaryStr);
         if (!Number.isFinite(n) || n < 0) errors.push("Salary must be a non-negative number.");
+        if (Number.isFinite(n) && n > 50000000) errors.push("Salary cannot exceed $50,000,000.");
       }
 
       if (startDateStr) {
@@ -109,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      if (!VALID_BOROUGHS.includes(borough)) errors.push("Invalid borough selection.");
+      if (!boroughs.includes(borough)) errors.push("Invalid borough selection.");
 
       if (errors.length > 0) {
         event.preventDefault();

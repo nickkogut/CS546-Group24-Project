@@ -4,11 +4,13 @@ import { checkString } from "../helpers.js";
 import { application } from "express";
 
 const _idToObjectId = (id) => {
-  if (!ObjectId.isValid(id)) throw "Error: invalid ObjectId";
+  if (!ObjectId.isValid(id)){
+    throw "Error: invalid ObjectId";
+  } 
   return new ObjectId(id);
 };
 
-const VALID_BOROUGHS = ["", "Manhattan", "Brooklyn", "Queens", "Bronx"];
+const boroughs = ["", "Manhattan", "Brooklyn", "Queens", "Bronx"];
 
 export const createUser = async ({
   firstName,
@@ -27,9 +29,19 @@ export const createUser = async ({
   if (typeof age !== "number" || age < 16 || age >= 100) throw "Error: invalid age";
   if (!hashedPassword) throw "Error: hashedPassword is required";
 
-  // resume should be allowed to be empty at account creation
-  resume = typeof resume === "string" ? resume : "";
-  resume = resume.trim();
+  if(typeof age !== "number" || age <= 0){
+    throw "Error: invalid age";
+  } 
+  if(!hashedPassword){
+    throw "Error: hashedPassword is required";
+  } 
+
+  // resume should be allowed to be empty at account creation, but must be filled in afterwards
+  if(typeof resume === "string"){
+    resume = resume.trim();
+  }else{
+    resume = "";
+  }
 
   const userDoc = {
     firstName,
@@ -37,7 +49,7 @@ export const createUser = async ({
     email,
     borough,
     age,
-    public: !!publicProfile,
+    public: publicProfile,
     resume,
     hashedPassword,
     heldJobs: [],
@@ -46,7 +58,9 @@ export const createUser = async ({
 
   const users = await usersCollection();
   const insertInfo = await users.insertOne(userDoc);
-  if (!insertInfo.insertedId) throw "Error: could not create user";
+  if (!insertInfo.insertedId){
+    throw "Error: could not create user";
+  } 
 
   userDoc._id = insertInfo.insertedId;
   return userDoc;
@@ -56,7 +70,9 @@ export const getUserById = async (id) => {
   const _id = _idToObjectId(id);
   const users = await usersCollection();
   const user = await users.findOne({ _id });
-  if (!user) throw "Error: user not found";
+  if(!user){
+    throw "Error: user not found";
+  } 
   return user;
 };
 
@@ -65,48 +81,64 @@ export const updateUserProfile = async (id, updates) => {
   const users = await usersCollection();
 
   const updateDoc = {};
-  if (updates.firstName) updateDoc.firstName = checkString(updates.firstName);
-  if (updates.lastName) updateDoc.lastName = checkString(updates.lastName);
-  if (updates.email) updateDoc.email = checkString(updates.email);
-  if (updates.borough) updateDoc.borough = checkString(updates.borough);
-  if (typeof updates.age === "number") updateDoc.age = updates.age;
-  if (typeof updates.public === "boolean") updateDoc.public = updates.public;
-  if (typeof updates.resume === "string") updateDoc.resume = updates.resume;
+  if(updates.firstName){
+    updateDoc.firstName = checkString(updates.firstName);
+  } 
+  if(updates.lastName){
+    updateDoc.lastName = checkString(updates.lastName);
+  } 
+  if(updates.email){
+    updateDoc.email = checkString(updates.email);
+  } 
+  if(updates.borough){
+    updateDoc.borough = checkString(updates.borough);
+  } 
+  if(typeof updates.age === "number"){
+    updateDoc.age = updates.age;
+  } 
+  if(typeof updates.public === "boolean"){
+    updateDoc.public = updates.public;
+  } 
+  if(typeof updates.resume === "string"){
+    updateDoc.resume = updates.resume;
+  } 
 
   const updateInfo = await users.findOneAndUpdate(
-    { _id },
-    { $set: updateDoc },
-    { returnDocument: "after" }
+    {_id},
+    {$set: updateDoc},
+    {returnDocument: "after"}
   );
 
   if (!updateInfo.value) throw "Error: could not update user";
   return updateInfo.value;
 };
 
-/**
- * NEW: Add a job to job history (heldJobs)
- * Supports: title, salary (optional), startDate (optional), borough (optional), currentJob (checkbox)
- * Enforces: only ONE job can be marked currentJob=true
- */
 export const addJobHistory = async (userId, jobData) => {
   const _id = _idToObjectId(userId);
   const users = await usersCollection();
 
   const title = checkString(jobData.title, "job title").trim();
-  if (title.length === 0) throw "Error: job title is required";
-  if (title.length > 100) throw "Error: job title is too long";
+  if(title.length === 0){
+    throw "Error: job title is required";
+  } 
+  if(title.length > 100){
+    throw "Error: job title is too long";
+  } 
 
   let salary = null;
   if (jobData.salary !== undefined && jobData.salary !== null && String(jobData.salary).trim() !== "") {
-    const n = Number(jobData.salary);
+    let n = Number(jobData.salary);
     if (!Number.isFinite(n) || n < 0) throw "Error: salary must be a non-negative number";
+    if (n > 50000000) throw "Error: salary cannot exceed $50,000,000";
+
     salary = n;
   }
 
   let startDate = null;
-  if (jobData.startDate && String(jobData.startDate).trim() !== "") {
+  if(jobData.startDate && String(jobData.startDate).trim() !== ""){
     const d = new Date(jobData.startDate);
     if (isNaN(d.getTime())) throw "Error: invalid start date";
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (d > today) throw "Error: start date cannot be in the future";
@@ -114,15 +146,14 @@ export const addJobHistory = async (userId, jobData) => {
   }
 
   let borough = "";
-  if (jobData.borough && String(jobData.borough).trim() !== "") {
+  if(jobData.borough && String(jobData.borough).trim() !== ""){
     borough = checkString(jobData.borough, "borough");
   }
-  if (!VALID_BOROUGHS.includes(borough)) throw "Error: invalid borough";
+  if(!boroughs.includes(borough)) throw "Error: invalid borough";
 
   const currentJob = !!jobData.currentJob;
 
-  // If this is marked current, clear currentJob from all other jobs first
-  if (currentJob) {
+  if(currentJob){
     await users.updateOne(
       { _id },
       { $set: { "heldJobs.$[].currentJob": false } }
@@ -139,15 +170,32 @@ export const addJobHistory = async (userId, jobData) => {
   };
 
   const updateInfo = await users.updateOne(
-    { _id },
-    { $push: { heldJobs: job } }
+    {_id},
+    {$push: { heldJobs: job }}
   );
 
   if (!updateInfo) throw "Error: could not add job";
   return job;
 };
 
-// (kept as-is in case other parts of your app still call it)
+export const deleteJobHistory = async (userId, heldJobId) => {
+  const _id = _idToObjectId(userId);
+  const heldJobObjectId = _idToObjectId(heldJobId);
+
+  const users = await usersCollection();
+
+  const updateInfo = await users.updateOne(
+    { _id },
+    { $pull: { heldJobs: { _id: heldJobObjectId } } }
+  );
+
+  if (!updateInfo || updateInfo.modifiedCount === 0) {
+    throw "Error: could not delete job";
+  }
+
+  return true;
+};
+
 export const addHeldJob = async (userId, jobData) => {
   const _id = _idToObjectId(userId);
   const users = await usersCollection();
@@ -162,7 +210,7 @@ export const addHeldJob = async (userId, jobData) => {
     startSalary: jobData.startSalary,
     endSalary: jobData.endSalary,
     borough: checkString(jobData.borough),
-    currentJob: !!jobData.currentJob
+    currentJob: jobData.currentJob
   };
 
   const updateInfo = await users.findOneAndUpdate(
@@ -179,11 +227,20 @@ export const addTaggedJob = async (userId, taggedJobData) => {
   const _id = _idToObjectId(userId);
   const jobId = _idToObjectId(taggedJobData.jobId);
 
+  let notes = "";
+  if(taggedJobData.notes){
+    notes = taggedJobData.notes;
+  }
+  let confidence = 5;
+  if(typeof taggedJobData.confidence === "number"){
+    confidence = taggedJobData.confidence;
+  }
+
   const taggedJob = {
     jobId: checkString(taggedJobData.jobId),
     applicationStatus: checkString(taggedJobData.applicationStatus),
-    notes: taggedJobData.notes || "",
-    confidence: typeof taggedJobData.confidence === "number" ? taggedJobData.confidence : 5
+    notes,
+    confidence
   };
 
   if (taggedJob.notes.length > 500) throw "Error: notes must be <= 500 chars";
@@ -214,8 +271,8 @@ export const removeTaggedJob = async (userId, jobId) => {
   const users = await usersCollection();
 
   const removalInfo = await users.updateOne(
-    { _id },
-    { $pull: { taggedJobs: { jobId } } }
+    {_id},
+    {$pull: {taggedJobs: {jobId}}}
   );
 
   if (!removalInfo) throw "Error: failed to remove job status";
@@ -240,23 +297,35 @@ export const updateUserResume = async (id, resumeText) => {
   return updateInfo;
 };
 
-// kept, but your account page no longer needs it once you switch to heldJobs
 export const updateCurrentJob = async (userId, jobData) => {
   const _id = _idToObjectId(userId);
   const users = await usersCollection();
 
   const title = checkString(jobData.title, "job title");
 
+  let salary = null;
+  if(typeof jobData.salary === "number"){
+    salary = jobData.salary;
+  }
+  let borough = null;
+  if(jobData.borough){
+    borough = checkString(jobData.borough, "borough");
+  }
+  let startDate = null;
+  if(jobData.startDate){
+    startDate = jobData.startDate;
+  }
+
   const currentJob = {
     title,
-    salary: typeof jobData.salary === "number" ? jobData.salary : null,
-    borough: jobData.borough ? checkString(jobData.borough, "borough") : null,
-    startDate: jobData.startDate || null
+    salary,
+    borough,
+    startDate
   };
 
   const updateInfo = await users.updateOne(
-    { _id },
-    { $set: { currentJob } }
+    {_id},
+    {$set: { currentJob }}
   );
 
   if (!updateInfo || updateInfo.modifiedCount === 0) {
@@ -272,17 +341,14 @@ export const getPublicUsers = async (numResults) => {
     public: true
   }).limit(numResults).toArray();
 
-  if (users) {
+  if (users){
     return users;
-  } else {
+  }else{
     return [];
   }
 }
 
 export const getMatchingTaggedJobs = async (userId, jobList) => {
-  // Takes a list of open job ids
-  // Returns an object matching each job id to its tagged job entry if it exists, or to an object with all fields set to default values otherwise
-  // Used for pre-populating tag information on the openJobs page for authed users
   const output = {};
 
   jobList.map((jobId) => {
@@ -314,16 +380,12 @@ export const getMatchingTaggedJobs = async (userId, jobList) => {
       jobList.includes(j.jobId)
     );
 
-
     if (filtered.length > 0) {
       filtered.forEach((match) => {
         output[match.jobId] = match;
       });
     }
   }
-
-
-
 
   return output;
 }

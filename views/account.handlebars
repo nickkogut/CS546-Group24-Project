@@ -1,4 +1,4 @@
-<main class="my-info-main">
+<main class="myInfo">
   <h1>My Info</h1>
 
   {{#if resumeError}}
@@ -22,8 +22,8 @@
     {{/if}}!
   </p>
 
-  <section id="resume-section">
-    <h2 id="resumeHeading">
+  <section id="resumeSection">
+    <h3 id="resumeHeading">
       {{#if hasResume}}
       Your resume
       {{else}}
@@ -60,8 +60,16 @@
       </div>
 
       <div class="field">
-        <label for="jobSalary">Salary (annual, $)</label>
-        <input id="jobSalary" name="salary" type="number" min="0" step="1000" value="{{jobSalaryValue}}">
+        <label for="jobSalary">Salary (Max $50M | Nearest $1000)</label>
+        <input
+          id="jobSalary"
+          name="salary"
+          type="number"
+          min="0"
+          step="1000"
+          required
+          value="{{jobSalaryValue}}"
+        >
       </div>
 
       <div class="field">
@@ -93,23 +101,32 @@
       </div>
     </form>
 
-    <h2>Job history</h2>
+    <h3>Job history (Sorted Alphabetically)</h3>
     {{#if hasJobs}}
-    {{#each heldJobs}}
-    <div class="job-card">
-      <strong>{{title}}</strong>
-      {{#if currentJob}} <span>(Current)</span>{{/if}}
+      {{#each heldJobs}}
+        <div class="job-card">
+          <div>
+            <strong>{{title}}</strong>
+            {{#if currentJob}} <span>(Current)</span>{{/if}}
+          </div>
 
       {{#if salary}}
       <div>Salary: {{formatMoney salary}}</div>
       {{/if}}
 
-      {{#if startDate}}
-      <div>Start: {{formatDate startDate}}</div>
-      {{/if}}
-      {{#if borough}}<div>Borough: {{borough}}</div>{{/if}}
-    </div>
-    {{/each}}
+          {{#if startDate}}
+            <div>Start: {{formatDate startDate}}</div>
+          {{/if}}
+
+          {{#if borough}}
+            <div>Borough: {{borough}}</div>
+          {{/if}}
+
+          <form method="post" action="/account/jobs/{{_id}}/delete">
+            <button type="submit" class="btn secondary">Delete</button>
+          </form>
+        </div>
+      {{/each}}
     {{else}}
     <p>No jobs added yet.</p>
     {{/if}}
