@@ -30,8 +30,13 @@ We implemented 3 of our proposed extra features:
 
 3. (#4 on proposal): Factoring in job experience on the Job Stats page: the user can view information specific to years of experience in a role. For example, they might look for the average salary of someone who has been in the same role as them for between 5 and 10 years. This might help them understand if they are being underpaid, or if people tend to move out of their position quickly.
 
-### Additional notes:
+### Dataset Information:
+Payroll History Dataset: https://data.cityofnewyork.us/City-Government/Citywide-Payroll-Data-Fiscal-Year-/k397-673e/about_data \
+Current Job Listings Dataset: https://data.cityofnewyork.us/City-Government/Jobs-NYC-Postings/kpav-sd4t/about_data
+
 - Staten Island does not report payroll history data in our dataset for the Compare page. However, it does supply open job listings. It is intentional that the compare page does not allow filtering the borough to Staten Island. We apologize for this lack of data coverage, but insist that there are plenty of jobs available from the other boroughs.
+- The dataset also appears to have occasional inaccurate salary data. The numbers reported on the page are directly from the dataset and are our best estimation of the real salary figures.
+- For the current job listing dataset, some job descriptions have characters which experienced unicode issues before being stored in the dataset and do not look how the original job poster intended. We cleaned these up as much as possible, but please note that all text is pulled directly from the dataset.
 
 ## Testing and using the website
 
