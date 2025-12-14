@@ -13,7 +13,11 @@
     const filterAgency = document.getElementById("filterAgency");
     const filterBorough = document.getElementById("filterBorough");
     const filterMinSalary = document.getElementById("filterMinSalary");
-    const listingLink = document.getElementById("listingLink");
+    //const listingLink = document.getElementById("listingLink");//
+    const graphMyJobsBtn = document.getElementById("graphMyJobsBtn");
+    const myJobsGraphs = document.getElementById("myJobsGraphs");
+    const selectedGraphContainer = document.getElementById("selectedGraphContainer");
+
 
     // Job stats transitions
     const fromJobInput = document.getElementById("fromJobInput");
@@ -43,6 +47,89 @@
     const experienceResults = document.getElementById("experienceResults");
 
     let chartInstance = null;
+
+function renderGraphForCanvas(canvas, salaries, userSalary, type) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const cleaned = cleanAndSortSalaries(salaries);
+  if (!cleaned.length) return;
+
+  const { bins } = buildHistogramBins(cleaned, userSalary);
+
+  if (type === "histogram") {
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: bins.map(b => b.label),
+        datasets: [{
+          label: "Employees",
+          data: bins.map(b => b.count),
+          backgroundColor: bins.map(b =>
+            b._userIncluded ? "rgba(255,0,0,0.4)" : "rgba(0,0,0,0.8)"
+          ),
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+    return;
+  }
+
+  if (type === "boxplot") {
+    const data = cleaned.slice().sort((a, b) => a - b);
+    if (userSalary != null) data.push(userSalary);
+
+    data.sort((a, b) => a - b);
+    const n = data.length;
+
+    const stats = [
+      data[0],
+      data[Math.floor((n - 1) * 0.25)],
+      data[Math.floor((n - 1) * 0.5)],
+      data[Math.floor((n - 1) * 0.75)],
+      data[n - 1]
+    ];
+
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: ["Min", "Q1", "Median", "Q3", "Max"],
+        datasets: [{
+          label: "Salary Distribution",
+          data: stats
+        }]
+      },
+      options: { responsive: true }
+    });
+    return;
+  }
+
+  // dot plot
+  new Chart(ctx, {
+    type: "scatter",
+    data: {
+      datasets: [{
+        data: cleaned.map(s => ({ x: s, y: Math.random() }))
+      }]
+    },
+    options: {
+      scales: {
+        x: { title: { display: true, text: "Salary" } },
+        y: { display: false }
+      }
+    }
+  });
+}
+
 
     function blockNegative(inputEl) {
       if (!inputEl) return;
@@ -143,71 +230,90 @@
       return { bins, binSize };
     }
 
-    function renderHistogram(salaries, userSalary) {
-      if (!histCtx) return;
-      const cleaned = cleanAndSortSalaries(salaries);
-      const { bins } = buildHistogramBins(cleaned, userSalary);
+function renderHistogram(salaries, userSalary, idIndex, job = null) {
+  const cleaned = cleanAndSortSalaries(salaries);
+  if (!cleaned.length) return;
 
-      if (!bins || !bins.length) {
-        statusP.textContent = "No salary data to show.";
-        destroyChart(chartInstance);
-        chartInstance = null;
-        return;
+  const { bins } = buildHistogramBins(cleaned, userSalary);
+
+  const labels = bins.map(b => b.label);
+  const counts = bins.map(b => b.count);
+  const backgroundColors = bins.map(b =>
+    b._userIncluded ? "rgba(255,0,0,0.4)" : "rgba(0,0,0,0.8)"
+  );
+
+  // ==========================
+  // SELECTED JOB GRAPH
+  // ==========================
+  if (!job) {
+    destroyChart(chartInstance);
+
+    chartInstance = new Chart(histCtx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Employees",
+          data: counts,
+          backgroundColor: backgroundColors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        },
+        plugins: {
+          legend: { display: false }
+        }
       }
+    });
 
-      const labels = bins.map((b) => b.label);
-      const counts = bins.map((b) => b.count);
-      const backgroundColors = bins.map((b) =>
-        b._userIncluded ? "rgba(255,0,0,0.4)" : "rgba(0,0,0,0.8)"
-      );
+    return;
+  }
 
-      destroyChart(chartInstance);
-      chartInstance = new Chart(histCtx, {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [
-            {
-              label: "Employees",
-              data: counts,
-              backgroundColor: backgroundColors,
-              borderWidth: 1,
-            },
-          ],
-        },
-        options: {
-          responsive: true,
-          scales: {
-            x: {
-              title: { display: true, text: "Salary Range" },
-              ticks: {
-                color: (ctx) => {
-                  const idx = ctx.index;
-                  const bin = bins[idx];
-                  return bin && bin._userIncluded ? "red" : "#000";
-                },
-              },
-            },
-            y: {
-              title: { display: true, text: "Count" },
-              beginAtZero: true,
-            },
-          },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: function (context) {
-                  const idx = context.dataIndex;
-                  const b = bins[idx];
-                  return `${b.count} employees (${b.label})`;
-                },
-              },
-            },
-          },
-        },
-      });
+  // ==========================
+  // JOB HISTORY GRAPH
+  // ==========================
+  const title = job.title || "Job";
+  const safeId = title.replace(/\W/g, "_") + (idIndex++);
+
+  const container = document.createElement("div");
+  container.style.marginBottom = "40px";
+
+  container.innerHTML = `
+    <h3>${escapeHtml(title)} — Your Salary: ${
+      job.salary ? formatMoney(job.salary) : "(n/a)"
+    }</h3>
+    <canvas id="jobGraph_${safeId}" width="800" height="400"></canvas>
+  `;
+
+  myJobsGraphs.appendChild(container);
+
+  const canvas = container.querySelector("canvas");
+
+  new Chart(canvas.getContext("2d"), {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Employees",
+        data: counts,
+        backgroundColor: backgroundColors,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true }
+      }
     }
+  });
+}
+
 
     function renderBoxplot(salaries, userSalary) {
       if (!histCtx) return;
@@ -357,8 +463,13 @@
     }
 
     async function handleGraph() {
+      selectedGraphContainer.style.display = "block";
+      myJobsGraphs.style.display = "none";
+      myJobsGraphs.innerHTML = "";
+      destroyChart(chartInstance);
+      chartInstance = null;
+
       statusP.textContent = "";
-      listingLink.innerHTML = "";
 
       const selectedJob = jobSelect ? jobSelect.value : "";
       if (!selectedJob) {
@@ -411,7 +522,7 @@
         }
 
         if (type === "histogram") {
-          renderHistogram(salaries, userSalary);
+          renderHistogram(salaries, userSalary, 0, null);
         } else if (type === "boxplot") {
           renderBoxplot(salaries, userSalary);
         } else if (type === "dotplot") {
@@ -420,11 +531,11 @@
           statusP.textContent = "Unknown chart type.";
         }
 
-        if (json.listingUrl) {
-          listingLink.innerHTML = `<a href="${json.listingUrl}" target="_blank">Open listings for this job</a>`;
-        } else {
-          listingLink.innerHTML = "";
-        }
+        // if (json.listingUrl) {
+        //   listingLink.innerHTML = `<a href="${json.listingUrl}" target="_blank">Open listings for this job</a>`;
+        // } else {
+        //   listingLink.innerHTML = "";
+        // }
       } catch (err) {
         console.error("Error fetching graph data:", err);
         statusP.textContent = "Error fetching data. Check console.";
@@ -803,6 +914,73 @@ if (advancedJobsBtn) {
     }
   });
 }
+// =============================================
+// GRAPH EACH JOB IN USER HISTORY SEPARATELY
+// =============================================
+if (graphMyJobsBtn) {
+  graphMyJobsBtn.addEventListener("click", async () => {
+    // show job history, hide main graph
+    selectedGraphContainer.style.display = "none";
+    myJobsGraphs.style.display = "block";
+
+    // clear main graph
+    destroyChart(chartInstance);
+    statusP.textContent = "";
+
+    // clear previous job graphs
+    myJobsGraphs.innerHTML = "";
+
+    try {
+      const res = await fetch("/compare/myJobsGraph");
+      const json = await res.json();
+
+      if (!res.ok) {
+        alert(json.error || "You must be logged in.");
+        return;
+      }
+
+      const jobs = json.jobs || [];
+      if (!jobs.length) {
+        alert("You have no job history.");
+        return;
+      }
+
+      const graphType = chartTypeSelect.value;
+      var idIndex = 0
+      for (const job of jobs) {
+        if (!job.salaries || !job.salaries.length) continue;
+
+        const container = document.createElement("div");
+        container.style.marginBottom = "40px";
+
+        const safeId = job.title.replace(/\W/g, "_") + (idIndex++);
+
+        container.innerHTML = `
+          <h3>${escapeHtml(job.title)} — Your Salary: ${
+            job.salary ? formatMoney(job.salary) : "(n/a)"
+          }</h3>
+          <canvas id="jobGraph_${safeId}" width="800" height="400"></canvas>
+        `;
+
+        myJobsGraphs.appendChild(container);
+
+        const canvas = container.querySelector("canvas");
+
+        renderGraphForCanvas(
+          canvas,
+          job.salaries,
+          job.salary,
+          graphType
+        );
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert("Error loading job history graphs.");
+    }
+  });
+}
+
 
   });
 })();
