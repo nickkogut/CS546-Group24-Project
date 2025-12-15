@@ -111,21 +111,18 @@ function renderGraphForCanvas(canvas, salaries, userSalary, type) {
           data: stats,
           backgroundColor: "rgba(0,0,0,0.7)"
         },
-        ...(typeof userSalary === "number" && Number.isFinite(userSalary)
-          ? [{
-              label: "Your Salary",
-              data: [null, null, userSalary, null, null],
-              backgroundColor: "rgba(255,0,0,0.8)",
-              borderColor: "red",
-              borderWidth: 2
-            }]
-          : [])
       ]
     },
     options: {
       responsive: true,
       plugins: { legend: { display: true } },
-      scales: { y: { beginAtZero: false } }
+      scales: {
+        y: {
+          beginAtZero: false,
+          grace: "5%",
+        },
+      },
+
     }
   });
   return;
@@ -444,6 +441,7 @@ function renderHistogram(salaries, userSalary, idIndex, job = null) {
         },
         options: {
           responsive: true,
+          barPercentage: 0.6,
           plugins: {
             legend: { display: showUser },
             tooltip: {
@@ -461,6 +459,7 @@ function renderHistogram(salaries, userSalary, idIndex, job = null) {
             y: {
               title: { display: true, text: "Salary" },
               beginAtZero: false,
+              grace: "5%"
             },
           },
         },
